@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2020", // Compiles to modern JS (good balance of features and compatibility)
+    "module": "ESNext", // Uses ES module syntax (`import/export`)
+    "moduleResolution": "bundler", // Helps TS resolve node_modules properly
+    "esModuleInterop": true, // Enables default import compatibility for CommonJS modules
+    "forceConsistentCasingInFileNames": true, // Prevents inconsistent import casing
+    "skipLibCheck": true, // Skips type checks on node_modules for speed
+    "strict": true, // Enables all strict type-checking options
+    "outDir": "dist", // Output directory after compiling
+    "rootDir": "src", // Your source directory
+    "noEmitOnError": true, // Prevents output if there are TypeScript errors
+    "resolveJsonModule": true,
+
+    "baseUrl": "./src", // Enables path aliases relative to /src
+    "paths": {
+      "@config/*": ["config/*"],
+      "@controllers/*": ["controllers/*"],
+      "@services/*": ["services/*"],
+      "@middlewares/*": ["middlewares/*"],
+      "@routes/*": ["routes/*"],
+      "@utils/*": ["utils/*"],
+      "@validations/*": ["validations/*"],
+      "@models/*": ["models/*"]
+    }
+  },
+
+  "include": ["src/**/*.ts", "src/types/**/*.d.ts"], // Files to compile
+  "exclude": ["node_modules", "dist"] // Ignored during compilation
+}

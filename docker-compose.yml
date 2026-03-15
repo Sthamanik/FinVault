@@ -1,0 +1,33 @@
+services:
+  app:
+    build: .
+    container_name: investment_app
+    ports:
+      - '5000:5000'
+    env_file:
+      - .env
+    volumes:
+      - ./tmp:/app/tmp
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    networks:
+      - investment_network
+
+  mongo: 
+    image: mongo:8
+    container_name: investment_mongo
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+    networks:
+      - investment_network
+
+volumes:
+  mongo_data:
+
+networks:
+  investment_network: 
+    driver: bridge
