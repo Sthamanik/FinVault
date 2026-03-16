@@ -97,7 +97,7 @@ class AdminService {
     await Admin.findByIdAndUpdate(
       adminId,
       { $unset: { refreshToken: 1 } },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     return null;

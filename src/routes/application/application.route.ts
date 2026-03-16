@@ -1,0 +1,59 @@
+import { Router } from "express";
+import ApplicationController from "@controllers/application/application.controller.js";
+import { verifyJWT } from "@middlewares/auth.middleware.js";
+import asyncHandler from "@utils/asyncHandler.utils.js";
+import upload from "@config/multer.js";
+import {
+  validateCreateApplication,
+  validateUpdateApplicationStatus,
+} from "@validations/application.validation.js";
+
+class ApplicationRoute {
+  public router: Router;
+
+  constructor() {
+    this.router = Router();
+    this.registerRoutes();
+  }
+
+  private registerRoutes() {
+    // Public apply
+    this.router.post(
+      "/:jobId",
+      upload.fields([
+        { name: "resume", maxCount: 1 },
+        { name: "coverLetterFile", maxCount: 1 },
+      ]),
+      validateCreateApplication,
+      asyncHandler(ApplicationController.create.bind(ApplicationController))
+    );
+
+    // Admin protected
+    this.router.get(
+      "/",
+      verifyJWT,
+      asyncHandler(ApplicationController.getAll.bind(ApplicationController))
+    );
+
+    this.router.get(
+      "/:id",
+      verifyJWT,
+      asyncHandler(ApplicationController.getById.bind(ApplicationController))
+    );
+
+    this.router.patch(
+      "/:id/status",
+      verifyJWT,
+      validateUpdateApplicationStatus,
+      asyncHandler(ApplicationController.updateStatus.bind(ApplicationController))
+    );
+
+    this.router.delete(
+      "/:id",
+      verifyJWT,
+      asyncHandler(ApplicationController.delete.bind(ApplicationController))
+    );
+  }
+}
+
+export default new ApplicationRoute().router;

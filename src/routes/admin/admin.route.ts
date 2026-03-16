@@ -1,5 +1,5 @@
 import { Router } from "express";
-import AdminController from "@controllers/admin.controller.js";
+import AdminController from "@controllers/admin/admin.controller.js";
 import { verifyJWT } from "@middlewares/auth.middleware.js";
 import asyncHandler from "@utils/asyncHandler.utils.js";
 import {
@@ -31,15 +31,15 @@ class AdminRoute {
     );
 
     this.router.post(
-      "/logout",
-      verifyJWT,
-      asyncHandler(AdminController.logout.bind(AdminController))
-    );
-
-    this.router.post(
       "/refresh-token",
       validateRefreshToken,
       asyncHandler(AdminController.refreshAccessToken.bind(AdminController))
+    );
+
+    this.router.post(
+      "/logout",
+      verifyJWT,
+      asyncHandler(AdminController.logout.bind(AdminController))
     );
 
     this.router.get(

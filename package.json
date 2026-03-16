@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/server.mjs",
+  "main": "dist/server.js",
   "type": "module",
   "scripts": {
     "test": "vitest",
@@ -10,7 +10,7 @@
     "typecheck": "tsc --noemit",
     "dev": "tsx watch src/server.ts",
     "build": "tsup src/server.ts --format esm --dts --out-dir dist",
-    "start": "node dist/server.mjs"
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",

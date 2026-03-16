@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { ApiResponse } from "@utils/apiResponse.utils.js";
 import { ApiError } from "@utils/apiError.utils.js";
-import AdminService from "@services/admin.service.js";
+import AdminService from "@services/admin/admin.service.js";
 
 class AdminController {
     private cookieOptions = {
