@@ -2,11 +2,11 @@ import { Router } from "express";
 import ApplicationController from "@controllers/application/application.controller.js";
 import { verifyJWT } from "@middlewares/auth.middleware.js";
 import asyncHandler from "@utils/asyncHandler.utils.js";
-import upload from "@config/multer.js";
 import {
   validateCreateApplication,
   validateUpdateApplicationStatus,
 } from "@validations/application.validation.js";
+import uploadPdf from "@config/multerPdf";
 
 class ApplicationRoute {
   public router: Router;
@@ -20,7 +20,7 @@ class ApplicationRoute {
     // Public apply
     this.router.post(
       "/:jobId",
-      upload.fields([
+      uploadPdf.fields([
         { name: "resume", maxCount: 1 },
         { name: "coverLetterFile", maxCount: 1 },
       ]),
