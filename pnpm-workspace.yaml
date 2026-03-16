@@ -1,3 +1,4 @@
 allowBuilds:
   argon2: false
   esbuild: false
+  mongodb-memory-server: false

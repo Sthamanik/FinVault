@@ -4,6 +4,9 @@ import cookieParser from "cookie-parser";
 import errorHandler from "@middlewares/errorHandler.middleware.js";
 import helmet from "helmet";
 
+// API Routes import 
+import adminRouter from "@routes/admin.route.js";
+
 const app = express();
 
 // App configuration
@@ -20,8 +23,6 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cookieParser());
 
 
-// Routes imports
-// implement later
 
 // Health check endpoint
 app.get("/health", (req, res) => {
@@ -33,7 +34,7 @@ app.get("/health", (req, res) => {
 });
 
 // API Routes initialization
-// implement later
+app.use("/api/v1/admin", adminRouter);
 
 // 404 handler for unknown routes
 app.use((req, res) => {

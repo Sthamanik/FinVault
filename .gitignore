@@ -4,6 +4,10 @@ node_modules
 # Build output
 dist
 
+# Test artifacts
+coverage
+.vitest
+
 # Environment
 .env
 .env.test
@@ -29,6 +33,3 @@ Thumbs.db
 
 # Scripts 
 scripts/
-
-# Test files
-tests/
