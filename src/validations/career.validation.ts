@@ -7,12 +7,13 @@ const createCareerSchema = z.object({
   department: z.string().min(1, 'Department is required').trim(),
   location: z.string().min(1, 'Location is required').trim(),
   type: z.enum(JOB_TYPES).refine((val) => JOB_TYPES.includes(val),{
-    message: 'Invalid jpb type'
+    message: 'Invalid job type'
   }),
   description: z.string().min(1, 'Description is required'),
   requirements: z
     .array(z.string().trim())
     .min(1, 'At least one requirement is needed'),
+  openings: z.number().int().min(1, 'At least 1 opening is required').default(1),
   isActive: z.boolean().default(true),
 });
 

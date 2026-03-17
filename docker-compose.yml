@@ -1,33 +1,46 @@
 services:
   app:
     build: .
-    container_name: investment_app
+    container_name: genesis_app
     ports:
-      - '5000:5000'
+      - '5001:5001'
     env_file:
       - .env
     volumes:
       - ./tmp:/app/tmp
     depends_on:
       - mongo
+      - redis
     restart: unless-stopped
     networks:
-      - investment_network
+      - genesis_network
 
   mongo: 
     image: mongo:8
-    container_name: investment_mongo
+    container_name: genesis_mongo
     ports:
       - '27017:27017'
     volumes:
       - mongo_data:/data/db
     restart: unless-stopped
     networks:
-      - investment_network
+      - genesis_network
+
+  redis:
+    image: redis:8
+    container_name: genesis_redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - genesis_network
 
 volumes:
   mongo_data:
+  redis_data:
 
 networks:
-  investment_network: 
+  genesis_network: 
     driver: bridge

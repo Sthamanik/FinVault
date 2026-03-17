@@ -1,6 +1,7 @@
 import { Router } from "express";
 import RewardController from "@controllers/reward/reward.controller.js";
 import { verifyJWT } from "@middlewares/auth.middleware.js";
+import { authenticatedLimiter } from "@middlewares/rateLimit.middleware.js";
 import asyncHandler from "@utils/asyncHandler.utils.js";
 import upload from "@config/multer.js";
 import {
@@ -31,6 +32,7 @@ class RewardRoute {
     this.router.post(
       "/",
       verifyJWT,
+      authenticatedLimiter,
       upload.single("image"),
       validateCreateReward,
       asyncHandler(RewardController.create.bind(RewardController))
@@ -39,6 +41,7 @@ class RewardRoute {
     this.router.patch(
       "/:id",
       verifyJWT,
+      authenticatedLimiter,
       upload.single("image"),
       validateUpdateReward,
       asyncHandler(RewardController.update.bind(RewardController))
@@ -47,6 +50,7 @@ class RewardRoute {
     this.router.delete(
       "/:id",
       verifyJWT,
+      authenticatedLimiter,
       asyncHandler(RewardController.delete.bind(RewardController))
     );
   }

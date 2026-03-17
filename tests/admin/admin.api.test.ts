@@ -1,49 +1,26 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import app from "../../src/app";
-
-const buildAdmin = (overrides?: Partial<{ email: string; password: string }>) =>
-  ({
-    email: "admin@example.com",
-    password: "Test@1234",
-    ...overrides,
-  }) as const;
+import { buildAdmin, loginAdmin, loginAsAdmin, seedAdmin } from "../helpers/admin";
 
 describe("Admin API", () => {
-  it("registers an admin", async () => {
+  it("rejects admin registration (route disabled)", async () => {
     const res = await request(app)
       .post("/api/v1/admin/register")
       .send(buildAdmin());
 
-    expect(res.status).toBe(201);
-    expect(res.body?.data?.admin?.email).toBe("admin@example.com");
-    expect(res.body?.data?.accessToken).toBeTruthy();
-  });
-
-  it("rejects duplicate registration", async () => {
-    await request(app).post("/api/v1/admin/register").send(buildAdmin());
-
-    const res = await request(app)
-      .post("/api/v1/admin/register")
-      .send(buildAdmin());
-
-    expect(res.status).toBe(409);
+    expect(res.status).toBe(404);
   });
 
   it("logs in an admin", async () => {
-    await request(app).post("/api/v1/admin/register").send(buildAdmin());
-
-    const res = await request(app).post("/api/v1/admin/login").send({
-      email: "admin@example.com",
-      password: "Test@1234",
-    });
+    const res = await loginAdmin();
 
     expect(res.status).toBe(200);
     expect(res.body?.data?.accessToken).toBeTruthy();
   });
 
   it("rejects login with wrong password", async () => {
-    await request(app).post("/api/v1/admin/register").send(buildAdmin());
+    await seedAdmin();
 
     const res = await request(app).post("/api/v1/admin/login").send({
       email: "admin@example.com",
@@ -54,8 +31,7 @@ describe("Admin API", () => {
   });
 
   it("gets current admin with valid session", async () => {
-    const agent = request.agent(app);
-    await agent.post("/api/v1/admin/register").send(buildAdmin());
+    const agent = await loginAsAdmin();
 
     const res = await agent.get("/api/v1/admin/me");
 
@@ -69,11 +45,8 @@ describe("Admin API", () => {
   });
 
   it("refreshes access token with refresh token", async () => {
-    const registerRes = await request(app)
-      .post("/api/v1/admin/register")
-      .send(buildAdmin());
-
-    const refreshToken = registerRes.body?.data?.refreshToken;
+    const loginRes = await loginAdmin();
+    const refreshToken = loginRes.body?.data?.refreshToken;
     const res = await request(app)
       .post("/api/v1/admin/refresh-token")
       .send({ refreshToken });
@@ -92,13 +65,10 @@ describe("Admin API", () => {
   });
 
   it("changes password and enforces new password", async () => {
-    await request(app).post("/api/v1/admin/register").send(buildAdmin());
+    await seedAdmin();
 
     const agent = request.agent(app);
-    await agent.post("/api/v1/admin/login").send({
-      email: "admin@example.com",
-      password: "Test@1234",
-    });
+    await agent.post("/api/v1/admin/login").send(buildAdmin());
 
     const changeRes = await agent
       .patch("/api/v1/admin/change-password")
@@ -123,8 +93,7 @@ describe("Admin API", () => {
   });
 
   it("logs out and clears session", async () => {
-    const agent = request.agent(app);
-    await agent.post("/api/v1/admin/register").send(buildAdmin());
+    const agent = await loginAsAdmin();
 
     const logoutRes = await agent.post("/api/v1/admin/logout");
     expect(logoutRes.status).toBe(200);

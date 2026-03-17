@@ -4,6 +4,7 @@ import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "@utils/cloudinary.utils.js";
+import cache from '@utils/cache.utils.js';
 
 interface CreateRewardData {
   title: string;
@@ -34,6 +35,8 @@ class RewardService {
 
     const reward = await Reward.create({ ...data, ...(image && { image }) });
 
+    // update cache version and return 
+    await cache.incrementVersion(`reward`)
     return reward;
   }
 
@@ -44,6 +47,14 @@ class RewardService {
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(100, Math.max(1, Number(limit)));
     const skip = (pageNum - 1) * limitNum;
+
+    // set the key to cache 
+    const version = await cache.getVersion('reward')
+    const key = `reward:v${version}:${page}:${limit}:${search??''}`;
+
+    // search the cache and return if hit
+    const data = await cache.get(key);
+    if (data) return data;
 
     const filter: Record<string, any> = { isDeleted: false };
 
@@ -64,8 +75,7 @@ class RewardService {
     ]);
 
     const totalPages = Math.ceil(total / limitNum);
-
-    return {
+    const result = {
       rewards,
       pagination: {
         total,
@@ -76,16 +86,27 @@ class RewardService {
         hasPrevPage: pageNum > 1,
       },
     };
+    
+    // set the result to cache and return 
+    await cache.set(key, result, 900)
+    return result;
   }
 
   // Get reward by id
   async getById(id: string) {
+    // create key to cache
+    const key = `reward:id:${id}`;
+    const data = await cache.get(key);
+    if (data) return data;
+
     const reward = await Reward.findOne({ _id: id, isDeleted: false });
 
     if (!reward) {
       throw new ApiError(404, "Reward not found");
     }
 
+    // set reward to cache and return
+    await cache.set(key, reward, 900);
     return reward;
   }
 
@@ -117,6 +138,11 @@ class RewardService {
       { returnDocument: "after", runValidators: true }
     );
 
+    // delete the reward key and update reward version
+    await Promise.all([
+      cache.delete(`reward:id:${id}`),
+      cache.incrementVersion('reward')
+    ]);
     return updated;
   }
 
@@ -134,6 +160,11 @@ class RewardService {
 
     await Reward.findByIdAndUpdate(id, { $set: { isDeleted: true } });
 
+    // delete the reward key and update reward version
+    await Promise.all([
+      cache.delete(`reward:id:${id}`),
+      cache.incrementVersion('reward')
+    ]);
     return null;
   }
 }

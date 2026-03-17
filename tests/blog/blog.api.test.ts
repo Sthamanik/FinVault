@@ -1,13 +1,7 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import app from "../../src/app";
-
-const buildAdmin = (overrides?: Partial<{ email: string; password: string }>) =>
-  ({
-    email: "admin@example.com",
-    password: "Test@1234",
-    ...overrides,
-  }) as const;
+import { loginAsAdmin } from "../helpers/admin";
 
 const buildBlog = (
   overrides?: Partial<{
@@ -25,11 +19,7 @@ const buildBlog = (
     ...overrides,
   }) as const;
 
-const registerAndGetAgent = async () => {
-  const agent = request.agent(app);
-  await agent.post("/api/v1/admin/register").send(buildAdmin());
-  return agent;
-};
+const registerAndGetAgent = async () => loginAsAdmin();
 
 describe("Blog API", () => {
   it("rejects creating a blog without auth", async () => {

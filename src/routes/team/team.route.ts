@@ -1,6 +1,7 @@
 import { Router } from "express";
 import TeamController from "@controllers/team/team.controller.js";
 import { verifyJWT } from "@middlewares/auth.middleware.js";
+import { authenticatedLimiter } from "@middlewares/rateLimit.middleware.js";
 import asyncHandler from "@utils/asyncHandler.utils.js";
 import upload from "@config/multer.js";
 import { ValidateCreateTeam, ValidateUpdateTeam } from "@validations/team.validation.js";
@@ -28,6 +29,7 @@ class TeamRoute {
     this.router.post(
       "/",
       verifyJWT,
+      authenticatedLimiter,
       upload.single("profilePhoto"),
       ValidateCreateTeam,
       asyncHandler(TeamController.create.bind(TeamController))
@@ -36,6 +38,7 @@ class TeamRoute {
     this.router.patch(
       "/:id",
       verifyJWT,
+      authenticatedLimiter,
       upload.single("profilePhoto"),
       ValidateUpdateTeam,
       asyncHandler(TeamController.update.bind(TeamController))
@@ -44,12 +47,14 @@ class TeamRoute {
     this.router.delete(
       "/:id",
       verifyJWT,
+      authenticatedLimiter,
       asyncHandler(TeamController.delete.bind(TeamController))
     );
 
     this.router.patch(
       "/:id/toggle-active",
       verifyJWT,
+      authenticatedLimiter,
       asyncHandler(TeamController.toggleActive.bind(TeamController))
     );
   }

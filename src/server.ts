@@ -2,6 +2,7 @@ import 'dotenv/config';
 import app from './app.js';
 import connectDB from '@config/db.js';
 import logger from '@utils/logger.utils.js';
+import '@config/redis.config.js';
 
 const PORT = process.env.PORT || 5001;
 

@@ -38,6 +38,13 @@ class ApplicationService {
       throw new ApiError(404, "Job not found");
     }
 
+    const existingAppication = await Application.findOne({
+      email: data.email, jobId
+    })
+    if (existingAppication){
+      throw new ApiError(409, "Application already exists");
+    }
+
     if (!resumePath) {
       throw new ApiError(400, "Resume file is required");
     }

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import ServiceController from '@controllers/services/services.controller.js';
 import { verifyJWT } from '@middlewares/auth.middleware.js';
+import { authenticatedLimiter } from '@middlewares/rateLimit.middleware.js';
 import asyncHandler from '@utils/asyncHandler.utils.js';
 import upload from '@config/multer.js';
 import {
@@ -32,6 +33,7 @@ class ServiceRoute {
     this.router.post(
       '/',
       verifyJWT,
+      authenticatedLimiter,
       upload.single('image'),
       validateCreateService,
       asyncHandler(ServiceController.create.bind(ServiceController))
@@ -40,6 +42,7 @@ class ServiceRoute {
     this.router.patch(
       '/:id',
       verifyJWT,
+      authenticatedLimiter,
       upload.single('image'),
       validateUpdateService,
       asyncHandler(ServiceController.update.bind(ServiceController))
@@ -48,12 +51,14 @@ class ServiceRoute {
     this.router.delete(
       '/:id',
       verifyJWT,
+      authenticatedLimiter,
       asyncHandler(ServiceController.delete.bind(ServiceController))
     );
 
     this.router.patch(
       '/:id/toggle-active',
       verifyJWT,
+      authenticatedLimiter,
       asyncHandler(ServiceController.toggleActive.bind(ServiceController))
     );
   }

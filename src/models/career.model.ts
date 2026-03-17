@@ -10,6 +10,7 @@ export interface ICareer extends Document {
   type: JobType;
   description: string;
   requirements: string[];
+  openings: number;
   isActive: boolean;
   isDeleted: boolean;
 }
@@ -43,6 +44,11 @@ const careerSchema = new Schema<ICareer>(
     requirements: {
       type: [String],
       default: [],
+    },
+    openings: {
+      type: Number,
+      default: 1,
+      min: 1, 
     },
     isActive: {
       type: Boolean,

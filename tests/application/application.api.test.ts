@@ -16,7 +16,7 @@ const buildCareer = () =>
     requirements: ["Finance degree"],
   });
 
-const createTempFile = (ext = ".jpg") => {
+const createTempFile = (ext = ".pdf") => {
   const filePath = path.join(
     os.tmpdir(),
     `resume-${Date.now()}-${Math.random().toString(16).slice(2)}${ext}`
@@ -28,7 +28,7 @@ const createTempFile = (ext = ".jpg") => {
 describe("Application API", () => {
   it("submits an application with resume", async () => {
     const career = await Career.create(buildCareer());
-    const resumePath = createTempFile(".jpg");
+    const resumePath = createTempFile(".pdf");
 
     try {
       const res = await request(app)
@@ -36,8 +36,8 @@ describe("Application API", () => {
         .field("name", "Taylor")
         .field("email", "taylor@example.com")
         .attach("resume", resumePath, {
-          filename: "resume.jpg",
-          contentType: "image/jpeg",
+          filename: "resume.pdf",
+          contentType: "application/pdf",
         });
 
       expect(res.status).toBe(201);

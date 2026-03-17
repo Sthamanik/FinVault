@@ -1,6 +1,7 @@
 import { Router } from "express";
 import BlogController from "@controllers/blog/blog.controller.js";
 import { verifyJWT } from "@middlewares/auth.middleware.js";
+import { authenticatedLimiter } from "@middlewares/rateLimit.middleware.js";
 import asyncHandler from "@utils/asyncHandler.utils.js";
 import upload from "@config/multer.js";
 import {
@@ -28,6 +29,7 @@ class BlogRoute {
     this.router.post(
       "/",
       verifyJWT,
+      authenticatedLimiter,
       upload.single("featuredImage"),
       validateCreateBLog,
       asyncHandler(BlogController.create.bind(BlogController))
@@ -36,6 +38,7 @@ class BlogRoute {
     this.router.patch(
       "/:id",
       verifyJWT,
+      authenticatedLimiter,
       upload.single("featuredImage"),
       validateUpdateBlog,
       asyncHandler(BlogController.update.bind(BlogController))
@@ -44,6 +47,7 @@ class BlogRoute {
     this.router.delete(
       "/:id",
       verifyJWT,
+      authenticatedLimiter,
       asyncHandler(BlogController.delete.bind(BlogController))
     );
   }

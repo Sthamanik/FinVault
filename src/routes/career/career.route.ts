@@ -1,6 +1,7 @@
 import { Router } from "express";
 import CareerController from "@controllers/career/career.controller.js";
 import { verifyJWT } from "@middlewares/auth.middleware.js";
+import { authenticatedLimiter } from "@middlewares/rateLimit.middleware.js";
 import asyncHandler from "@utils/asyncHandler.utils.js";
 import {
   ValidateCreateCareer,
@@ -30,6 +31,7 @@ class CareerRoute {
     this.router.post(
       "/",
       verifyJWT,
+      authenticatedLimiter,
       ValidateCreateCareer,
       asyncHandler(CareerController.create.bind(CareerController))
     );
@@ -37,6 +39,7 @@ class CareerRoute {
     this.router.patch(
       "/:id",
       verifyJWT,
+      authenticatedLimiter,
       ValidateUpdateCareer,
       asyncHandler(CareerController.update.bind(CareerController))
     );
@@ -44,12 +47,14 @@ class CareerRoute {
     this.router.delete(
       "/:id",
       verifyJWT,
+      authenticatedLimiter,
       asyncHandler(CareerController.delete.bind(CareerController))
     );
 
     this.router.patch(
       "/:id/toggle-active",
       verifyJWT,
+      authenticatedLimiter,
       asyncHandler(CareerController.toggleActive.bind(CareerController))
     );
   }

@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import errorHandler from "@middlewares/errorHandler.middleware.js";
 import helmet from "helmet";
+import { defaultLimiter } from "@middlewares/rateLimit.middleware.js";
 
 // API Routes import 
 import adminRouter from "@routes/admin/admin.route.js";
@@ -27,6 +28,7 @@ app.use(
 );
 app.use(helmet())
 app.use(pinoHttp({logger}))
+app.use(defaultLimiter)
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));

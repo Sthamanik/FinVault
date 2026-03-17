@@ -4,6 +4,7 @@ import {
   uploadOnCloudinary,
   deleteFromCloudinary,
 } from '@utils/cloudinary.utils.js';
+import cache from '@utils/cache.utils.js'
 
 interface CreateServiceData {
   title: string;
@@ -38,6 +39,8 @@ class ServiceService {
 
     const service = await Service.create({ ...data, ...(image && { image }) });
 
+    // update the cache version and return 
+    await cache.incrementVersion('service');
     return service;
   }
 
@@ -48,6 +51,14 @@ class ServiceService {
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(100, Math.max(1, Number(limit)));
     const skip = (pageNum - 1) * limitNum;
+
+    // Create a key to cache
+    const version = await cache.getVersion('service');
+    const key = `service:v${version}:${page}:${limit}:${isActive??''}:${search??''}`;
+
+    // hit the cache and return if hit 
+    const data = await cache.get(key);
+    if (data) return data;
 
     const filter: Record<string, any> = { isDeleted: false };
 
@@ -73,8 +84,7 @@ class ServiceService {
     ]);
 
     const totalPages = Math.ceil(total / limitNum);
-
-    return {
+    const result = {
       services,
       pagination: {
         total,
@@ -84,17 +94,28 @@ class ServiceService {
         hasNextPage: pageNum < totalPages,
         hasPrevPage: pageNum > 1,
       },
-    };
+    }
+
+    // set the result in cache and return 
+    await cache.set(key, result, 900);
+    return result;
   }
 
   // Get single service by ID
   async getById(id: string) {
+    // create key to cache
+    const key = `service:id:${id}`;
+    const data = await cache.get(key);
+    if (data) return data;
+
     const service = await Service.findOne({ _id: id, isDeleted: false });
 
     if (!service) {
       throw new ApiError(404, 'Service not found');
     }
 
+    // set the service in cache and return 
+    await cache.set(key, service, 900);
     return service;
   }
 
@@ -128,6 +149,11 @@ class ServiceService {
       { returnDocument: "after", runValidators: true }
     );
 
+    // delete the cache and update the version
+    await Promise.all([
+      cache.delete(`service:id:${id}`),
+      cache.incrementVersion(`service`)
+    ]);
     return updated;
   }
 
@@ -146,6 +172,11 @@ class ServiceService {
 
     await Service.findByIdAndUpdate(id, { $set: { isDeleted: true } });
 
+    // delete the cache and update the version
+    await Promise.all([
+      cache.delete(`service:id:${id}`),
+      cache.incrementVersion(`service`)
+    ]);
     return null;
   }
 
@@ -160,6 +191,11 @@ class ServiceService {
     service.isActive = !service.isActive;
     await service.save();
 
+    // delete the cache and update the version
+    await Promise.all([
+      cache.delete(`service:id:${id}`),
+      cache.incrementVersion(`service`)
+    ]);
     return service;
   }
 }

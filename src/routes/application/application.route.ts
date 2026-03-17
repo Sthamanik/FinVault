@@ -1,6 +1,7 @@
 import { Router } from "express";
 import ApplicationController from "@controllers/application/application.controller.js";
 import { verifyJWT } from "@middlewares/auth.middleware.js";
+import { authenticatedLimiter, publicWriteLimiter } from "@middlewares/rateLimit.middleware.js";
 import asyncHandler from "@utils/asyncHandler.utils.js";
 import {
   validateCreateApplication,
@@ -20,6 +21,7 @@ class ApplicationRoute {
     // Public apply
     this.router.post(
       "/:jobId",
+      publicWriteLimiter,
       uploadPdf.fields([
         { name: "resume", maxCount: 1 },
         { name: "coverLetterFile", maxCount: 1 },
@@ -32,18 +34,21 @@ class ApplicationRoute {
     this.router.get(
       "/",
       verifyJWT,
+      authenticatedLimiter,
       asyncHandler(ApplicationController.getAll.bind(ApplicationController))
     );
 
     this.router.get(
       "/:id",
       verifyJWT,
+      authenticatedLimiter,
       asyncHandler(ApplicationController.getById.bind(ApplicationController))
     );
 
     this.router.patch(
       "/:id/status",
       verifyJWT,
+      authenticatedLimiter,
       validateUpdateApplicationStatus,
       asyncHandler(ApplicationController.updateStatus.bind(ApplicationController))
     );
@@ -51,6 +56,7 @@ class ApplicationRoute {
     this.router.delete(
       "/:id",
       verifyJWT,
+      authenticatedLimiter,
       asyncHandler(ApplicationController.delete.bind(ApplicationController))
     );
   }

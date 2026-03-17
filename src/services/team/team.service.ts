@@ -4,6 +4,7 @@ import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "@utils/cloudinary.utils.js";
+import cache from '@utils/cache.utils.js';
 
 interface CreateTeamData {
   name: string;
@@ -45,6 +46,8 @@ class TeamService {
       ...(profilePhoto && { profilePhoto }),
     });
 
+    // increment the team version in cache
+    await cache.incrementVersion('team');
     return team;
   }
 
@@ -55,6 +58,14 @@ class TeamService {
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(100, Math.max(1, Number(limit)));
     const skip = (pageNum - 1) * limitNum;
+
+    // create the key to cache
+    const version = await cache.getVersion('team');
+    const key = `team:v${version}:${page}:${limit}:${isActive??''}:${search??''}`;
+
+    // search the key in cache and return if hit 
+    const data = await cache.get(key);
+    if (data) return data;
 
     const filter: Record<string, any> = { isDeleted: false };
 
@@ -79,8 +90,7 @@ class TeamService {
     ]);
 
     const totalPages = Math.ceil(total / limitNum);
-
-    return {
+    const result = {
       teams,
       pagination: {
         total,
@@ -91,16 +101,28 @@ class TeamService {
         hasPrevPage: pageNum > 1,
       },
     };
+    
+    // set the result in cache and return 
+    await cache.set(key, result, 900);
+    return result;
   }
 
   // Get team member by id
   async getById(id: string) {
-    const team = await Team.findOne({ _id: id, isDeleted: false });
+    // create a key to cache 
+    const key = `team:id:${id}`;
 
+    // search the cache and return if hit 
+    const data = await cache.get(key);
+    if (data) return data;
+
+    const team = await Team.findOne({ _id: id, isDeleted: false });
     if (!team) {
       throw new ApiError(404, "Team member not found");
     }
 
+    // set team to cache and return 
+    await cache.set(key, team, 900);
     return team;
   }
 
@@ -135,6 +157,11 @@ class TeamService {
       { returnDocument: "after", runValidators: true }
     );
 
+    // remove team key and increment update version 
+    await Promise.all([
+      cache.delete(`team:id:${id}`),
+      cache.incrementVersion('team')
+    ])
     return updated;
   }
 
@@ -152,6 +179,11 @@ class TeamService {
 
     await Team.findByIdAndUpdate(id, { $set: { isDeleted: true } });
 
+    // remove team key and increment update version 
+    await Promise.all([
+      cache.delete(`team:id:${id}`),
+      cache.incrementVersion('team')
+    ])
     return null;
   }
 
@@ -166,6 +198,11 @@ class TeamService {
     team.isActive = !team.isActive;
     await team.save();
 
+    // remove team key and increment update version 
+    await Promise.all([
+      cache.delete(`team:id:${id}`),
+      cache.incrementVersion('team')
+    ])
     return team;
   }
 }
