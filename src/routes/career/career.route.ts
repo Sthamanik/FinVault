@@ -22,12 +22,21 @@ class CareerRoute {
       "/",
       asyncHandler(CareerController.getAll.bind(CareerController))
     );
+
+
     this.router.get(
-      "/:id",
-      asyncHandler(CareerController.getById.bind(CareerController))
+      "/slug/:slug",
+      asyncHandler(CareerController.getBySlug.bind(CareerController))
     );
 
     // Admin protected
+    this.router.get(
+      "/:id",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(CareerController.getById.bind(CareerController))
+    );
+
     this.router.post(
       "/",
       verifyJWT,

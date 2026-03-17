@@ -54,6 +54,7 @@ describe("Service API", () => {
 
     expect(res.status).toBe(201);
     expect(res.body?.data?.title).toBe("Wealth Growth");
+    expect(res.body?.data?.slug).toBe("wealth-growth");
   });
 
   it("lists services with pagination", async () => {
@@ -70,15 +71,40 @@ describe("Service API", () => {
     expect(res.body?.data?.pagination?.total).toBe(2);
   });
 
-  it("fetches a service by id", async () => {
+  it("rejects getting a service by id without auth", async () => {
     const agent = await registerAndGetAgent();
     const created = await sendServiceForm(agent, buildService());
     const id = created.body?.data?._id;
 
     const res = await request(app).get(`/api/v1/services/${id}`);
+    expect(res.status).toBe(401);
+  });
+
+  it("fetches a service by id with auth", async () => {
+    const agent = await registerAndGetAgent();
+    const created = await sendServiceForm(agent, buildService());
+    const id = created.body?.data?._id;
+
+    const res = await agent.get(`/api/v1/services/${id}`);
 
     expect(res.status).toBe(200);
     expect(res.body?.data?.title).toBe("Wealth Growth");
+  });
+
+  it("fetches a service by slug (public)", async () => {
+    const agent = await registerAndGetAgent();
+    await sendServiceForm(agent, buildService());
+
+    const res = await request(app).get("/api/v1/services/slug/wealth-growth");
+
+    expect(res.status).toBe(200);
+    expect(res.body?.data?.title).toBe("Wealth Growth");
+    expect(res.body?.data?.slug).toBe("wealth-growth");
+  });
+
+  it("returns 404 for non-existent service slug", async () => {
+    const res = await request(app).get("/api/v1/services/slug/non-existent");
+    expect(res.status).toBe(404);
   });
 
   it("updates a service with auth", async () => {
@@ -113,7 +139,7 @@ describe("Service API", () => {
     const delRes = await agent.delete(`/api/v1/services/${id}`);
     expect(delRes.status).toBe(200);
 
-    const getRes = await request(app).get(`/api/v1/services/${id}`);
+    const getRes = await request(app).get("/api/v1/services/slug/wealth-growth");
     expect(getRes.status).toBe(404);
   });
 });

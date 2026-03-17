@@ -37,6 +37,15 @@ describe("Career API", () => {
 
     expect(res.status).toBe(201);
     expect(res.body?.data?.title).toBe("Analyst");
+    expect(res.body?.data?.slug).toBe("analyst");
+  });
+
+  it("rejects duplicate career creation", async () => {
+    const agent = await registerAndGetAgent();
+    await agent.post("/api/v1/careers").send(buildCareer());
+    const res = await agent.post("/api/v1/careers").send(buildCareer());
+
+    expect(res.status).toBe(409);
   });
 
   it("lists careers", async () => {
@@ -48,14 +57,38 @@ describe("Career API", () => {
     expect(res.body?.data?.careers?.length).toBe(1);
   });
 
-  it("gets a career by id", async () => {
+  it("rejects getting a career by id without auth", async () => {
     const agent = await registerAndGetAgent();
     const created = await agent.post("/api/v1/careers").send(buildCareer());
     const id = created.body?.data?._id;
 
     const res = await request(app).get(`/api/v1/careers/${id}`);
+    expect(res.status).toBe(401);
+  });
+
+  it("gets a career by id with auth", async () => {
+    const agent = await registerAndGetAgent();
+    const created = await agent.post("/api/v1/careers").send(buildCareer());
+    const id = created.body?.data?._id;
+
+    const res = await agent.get(`/api/v1/careers/${id}`);
     expect(res.status).toBe(200);
     expect(res.body?.data?.title).toBe("Analyst");
+  });
+
+  it("gets a career by slug (public)", async () => {
+    const agent = await registerAndGetAgent();
+    await agent.post("/api/v1/careers").send(buildCareer());
+
+    const res = await request(app).get("/api/v1/careers/slug/analyst");
+    expect(res.status).toBe(200);
+    expect(res.body?.data?.title).toBe("Analyst");
+    expect(res.body?.data?.slug).toBe("analyst");
+  });
+
+  it("returns 404 for non-existent career slug", async () => {
+    const res = await request(app).get("/api/v1/careers/slug/non-existent");
+    expect(res.status).toBe(404);
   });
 
   it("updates a career with auth", async () => {
@@ -89,7 +122,7 @@ describe("Career API", () => {
     const delRes = await agent.delete(`/api/v1/careers/${id}`);
     expect(delRes.status).toBe(200);
 
-    const getRes = await request(app).get(`/api/v1/careers/${id}`);
+    const getRes = await request(app).get("/api/v1/careers/slug/analyst");
     expect(getRes.status).toBe(404);
   });
 });

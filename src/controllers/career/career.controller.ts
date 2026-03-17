@@ -43,6 +43,17 @@ class CareerController {
       .json(new ApiResponse(200, career, "Career fetched successfully"));
   }
 
+  // Get career by slug
+  async getBySlug(req: Request, res: Response) {
+    const { slug} = req.params;
+
+    const career = await CareerService.getBySlug(slug as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, career, "Career fetched successfully"));
+  }
+
   // Update career
   async update(req: Request, res: Response) {
     const { id } = req.params;

@@ -119,6 +119,24 @@ class ServiceService {
     return service;
   }
 
+  // Get single service by slug
+  async getBySlug(slug: string) {
+    // create key to cache
+    const key = `service:slug:${slug}`;
+    const data = await cache.get(key);
+    if (data) return data;
+
+    const service = await Service.findOne({ slug, isDeleted: false });
+
+    if (!service) {
+      throw new ApiError(404, 'Service not found');
+    }
+
+    // set the service in cache and return 
+    await cache.set(key, service, 900);
+    return service;
+  }
+
   // Update service
   async update(id: string, data: Partial<CreateServiceData>, imagePath?: string) {
     const service = await Service.findOne({ _id: id, isDeleted: false });
@@ -152,6 +170,7 @@ class ServiceService {
     // delete the cache and update the version
     await Promise.all([
       cache.delete(`service:id:${id}`),
+      cache.delete(`service:slug:${service.slug}`),
       cache.incrementVersion(`service`)
     ]);
     return updated;
@@ -175,6 +194,7 @@ class ServiceService {
     // delete the cache and update the version
     await Promise.all([
       cache.delete(`service:id:${id}`),
+      cache.delete(`service:slug:${service.slug}`),
       cache.incrementVersion(`service`)
     ]);
     return null;
@@ -194,6 +214,7 @@ class ServiceService {
     // delete the cache and update the version
     await Promise.all([
       cache.delete(`service:id:${id}`),
+      cache.delete(`service:slug:${service.slug}`),
       cache.incrementVersion(`service`)
     ]);
     return service;

@@ -1,10 +1,12 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { createUniqueSlug } from '@utils/slug.utils.js';
 
 export const JOB_TYPES = ['full-time', 'part-time', 'contract', 'internship'] as const;
 export type JobType = (typeof JOB_TYPES)[number];
 
 export interface ICareer extends Document {
   title: string;
+  slug: string;
   department: string;
   location: string;
   type: JobType;
@@ -21,6 +23,12 @@ const careerSchema = new Schema<ICareer>(
       type: String,
       required: [true, 'Job title is required'],
       trim: true,
+    },
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      trim: true
     },
     department: {
       type: String,
@@ -61,6 +69,11 @@ const careerSchema = new Schema<ICareer>(
   },
   { timestamps: true }
 );
+// Auto-generate slug from title
+careerSchema.pre('save', async function () {
+  if (!this.isModified('title')) return;
+    this.slug = await createUniqueSlug(this.title, mongoose.models.Career, this._id);
+});
 
 careerSchema.index({ isActive: 1, isDeleted: 1, createdAt: -1 });
 

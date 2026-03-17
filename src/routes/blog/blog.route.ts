@@ -21,11 +21,18 @@ class BlogRoute {
     // Public
     this.router.get("/", asyncHandler(BlogController.getAll.bind(BlogController)));
     this.router.get(
-      "/:id",
-      asyncHandler(BlogController.getById.bind(BlogController))
+      "/slug/:slug",
+      asyncHandler(BlogController.getBySlug.bind(BlogController))
     );
 
     // Admin protected
+    this.router.get(
+      "/:id",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(BlogController.getById.bind(BlogController))
+    );
+
     this.router.post(
       "/",
       verifyJWT,

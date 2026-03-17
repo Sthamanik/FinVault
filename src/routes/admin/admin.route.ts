@@ -18,6 +18,7 @@ class AdminRoute {
   }
 
   private registerRoutes() {
+    // Public routes
     this.router.post(
       "/login",
       authLimiter,
@@ -32,6 +33,7 @@ class AdminRoute {
       asyncHandler(AdminController.refreshAccessToken.bind(AdminController))
     );
 
+    // authenticated routes 
     this.router.post(
       "/logout",
       verifyJWT,

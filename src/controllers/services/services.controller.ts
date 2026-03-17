@@ -34,11 +34,22 @@ class ServiceController {
       .json(new ApiResponse(200, result, 'Services fetched successfully'));
   }
 
-  // Get single service
+  // Get single service by id
   async getById(req: Request, res: Response) {
     const { id } = req.params;
 
     const service = await ServiceService.getById(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, service, 'Service fetched successfully'));
+  }
+
+  // Get single service by slug
+  async getBySlug(req: Request, res: Response) {
+    const { slug } = req.params;
+
+    const service = await ServiceService.getBySlug(slug as string);
 
     res
       .status(200)

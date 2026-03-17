@@ -142,6 +142,28 @@ class BlogService {
     return blog;
   }
 
+  // Get blog by slug
+  async getBySlug(slug: string) {
+    // create a key to cache the db
+    const key = `blog:slug:${slug}`;
+
+    // if cache hit return the data
+    const data = await cache.get(key);
+    if (data) {
+      return data
+    }
+
+    const blog = await Blog.findOne({ slug, isDeleted: false });
+
+    if (!blog) {
+      throw new ApiError(404, "Blog not found");
+    }
+
+    // set the cache and return
+    await cache.set(key, blog, 600);
+    return blog;
+  }
+
   // Update blog
   async update(id: string, data: Partial<CreateBlogData>, imagePath?: string) {
     const blog = await Blog.findOne({ _id: id, isDeleted: false });
@@ -176,6 +198,7 @@ class BlogService {
     // delete the cache and update cache version
     await Promise.all([
       cache.delete(`blog:id:${id}`),
+      cache.delete(`blog:slug:${blog.slug}`),
       cache.incrementVersion('blog')
     ]);
 
@@ -199,6 +222,7 @@ class BlogService {
     // delete the cache and update cache version
     await Promise.all([
       cache.delete(`blog:id:${id}`),
+      cache.delete(`blog:slug:${blog.slug}`),
       cache.incrementVersion('blog')
     ]);
 

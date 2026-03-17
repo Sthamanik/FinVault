@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import slugify from 'slugify';
+import { createUniqueSlug } from '@utils/slug.utils.js';
 
 export interface IBlog extends Document {
   title: string;
@@ -82,17 +82,7 @@ const blogSchema = new Schema<IBlog>(
 // Auto-generate slug from title
 blogSchema.pre('save', async function () {
   if (!this.isModified('title')) return;
-
-  const baseSlug = slugify(this.title, { lower: true, strict: true });
-
-  // Handle duplicate slugs by appending a number
-  let slug = baseSlug;
-  let count = 1;
-  while (await mongoose.models.Blog.findOne({ slug, _id: { $ne: this._id } })) {
-    slug = `${baseSlug}-${count}`;
-    count++;
-  }
-  this.slug = slug;
+  this.slug = await createUniqueSlug(this.title, mongoose.models.Blog, this._id);
 });
 
 // Auto-calculate read time from content

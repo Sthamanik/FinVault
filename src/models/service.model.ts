@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { createUniqueSlug } from '@utils/slug.utils.js';
 
 export const INDUSTRIES = [
   'Technology',
@@ -17,6 +18,7 @@ export type Industry = (typeof INDUSTRIES)[number];
 
 export interface IService extends Document {
   title: string;
+  slug: string;
   shortDescription: string;
   longDescription?: string;
   image?: {
@@ -36,6 +38,12 @@ const serviceSchema = new Schema<IService>(
     title: {
       type: String,
       required: [true, 'Title is required'],
+      trim: true,
+    },
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
       trim: true,
     },
     shortDescription: {
@@ -79,6 +87,12 @@ const serviceSchema = new Schema<IService>(
   },
   { timestamps: true }
 );
+
+// Auto-generate slug from title
+serviceSchema.pre('save', async function () {
+  if (!this.isModified('title')) return;
+  this.slug = await createUniqueSlug(this.title, mongoose.models.Service, this._id);
+});
 
 serviceSchema.index({ isActive: 1, isDeleted: 1, order: 1 });
 

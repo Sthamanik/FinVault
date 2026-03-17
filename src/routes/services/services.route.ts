@@ -25,11 +25,18 @@ class ServiceRoute {
     );
 
     this.router.get(
-      '/:id',
-      asyncHandler(ServiceController.getById.bind(ServiceController))
+      '/slug/:slug',
+      asyncHandler(ServiceController.getBySlug.bind(ServiceController))
     );
 
     // Admin protected
+    this.router.get(
+      '/:id',
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(ServiceController.getById.bind(ServiceController))
+    );
+
     this.router.post(
       '/',
       verifyJWT,

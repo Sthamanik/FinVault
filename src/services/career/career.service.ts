@@ -120,6 +120,26 @@ class CareerService {
     return career;
   }
 
+  // Get career by slug
+  async getBySlug(slug: string) {
+    // create a key
+    const key = `career:slug:${slug}`
+    
+    // hit the cache and return
+    const data = await cache.get(key);
+    if(data) return data;
+
+    const career = await Career.findOne({ slug, isDeleted: false });
+
+    if (!career) {
+      throw new ApiError(404, "Career not found");
+    }
+
+    // set the data in cache and return
+    await cache.set(key, career, 600);
+    return career;
+  }
+
   // Update career
   async update(id: string, data: Partial<CreateCareerData>) {
     const career = await Career.findOne({ _id: id, isDeleted: false });
@@ -137,6 +157,7 @@ class CareerService {
     // delete the cache and update cache version
     await Promise.all([
       cache.delete(`career:id:${id}`),
+      cache.delete(`career:slug:${career.slug}`),
       cache.incrementVersion('career')
     ]);
     return updated;
@@ -155,6 +176,7 @@ class CareerService {
     // delete the cache and update cache version
     await Promise.all([
       cache.delete(`career:id:${id}`),
+      cache.delete(`career:slug:${career.slug}`),
       cache.incrementVersion('career')
     ]);
     return null;
@@ -174,6 +196,7 @@ class CareerService {
     // delete the cache and update cache version
     await Promise.all([
       cache.delete(`career:id:${id}`),
+      cache.delete(`career:slug:${career.slug}`),
       cache.incrementVersion('career')
     ]);
     return career;
