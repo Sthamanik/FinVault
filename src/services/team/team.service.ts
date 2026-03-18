@@ -1,11 +1,10 @@
 import Team from "@models/team.model.js";
 import { ApiError } from "@utils/apiError.utils.js";
-import {
-  deleteFromR2,
-  uploadToR2,
-} from "@utils/r2.utils.js";
+import { uploadToR2 } from "@utils/r2.utils.js";
 import cache from '@utils/cache.utils.js';
 import { CreateTeamData, GetAllTeamsQuery } from "@interfaces/team.interface.js";
+import { enqueueR2Delete } from "@queues/r2.queue.js";
+import logger from "@utils/logger.utils.js";
 
 class TeamService {
   // Create team member
@@ -120,7 +119,9 @@ class TeamService {
 
     if (imagePath) {
       if (team.profilePhoto?.public_id) {
-        await deleteFromR2(team.profilePhoto.public_id);
+        enqueueR2Delete(team.profilePhoto.public_id).catch((err) =>
+          logger.error(`team failed to enqueue R2 delete: ${err.message}`)
+        );
       }
 
       const uploaded = await uploadToR2(imagePath);
@@ -183,7 +184,9 @@ class TeamService {
     if (!team) throw new ApiError(404, "Team member not found or not soft-deleted first");
 
     if (team.profilePhoto?.public_id) {
-      await deleteFromR2(team.profilePhoto.public_id);
+      enqueueR2Delete(team.profilePhoto.public_id).catch((err) =>
+        logger.error(`team failed to enqueue R2 delete: ${err.message}`)
+      );
     }
 
     await Team.findByIdAndDelete(id);

@@ -1,11 +1,10 @@
 import Blog from "@models/blog.model.js";
 import { ApiError } from "@utils/apiError.utils.js";
 import cache from "@utils/cache.utils.js";
-import {
-  deleteFromR2,
-  uploadToR2,
-} from "@utils/r2.utils.js";
+import { uploadToR2 } from "@utils/r2.utils.js";
 import { CreateBlogData, GetAllBlogsQuery } from "@interfaces/blog.interface.js";
+import { enqueueR2Delete } from "@queues/r2.queue.js";
+import logger from "@utils/logger.utils.js";
 
 class BlogService {
   // Create blog
@@ -157,7 +156,9 @@ class BlogService {
 
     if (imagePath) {
       if (blog.featuredImage?.public_id) {
-        await deleteFromR2(blog.featuredImage.public_id);
+        enqueueR2Delete(blog.featuredImage.public_id).catch((err) =>
+          logger.error(`blog failed to enqueue R2 delete: ${err.message}`)
+        );
       }
 
       const uploaded = await uploadToR2(imagePath);
@@ -219,7 +220,9 @@ class BlogService {
     if (!blog) throw new ApiError(404, "Blog not found or not soft-deleted first");
 
     if (blog.featuredImage?.public_id) {
-      await deleteFromR2(blog.featuredImage.public_id);
+      enqueueR2Delete(blog.featuredImage.public_id).catch((err) =>
+        logger.error(`blog failed to enqueue R2 delete: ${err.message}`)
+      );
     }
 
     await Blog.findByIdAndDelete(id);

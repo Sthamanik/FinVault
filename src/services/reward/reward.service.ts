@@ -1,11 +1,10 @@
 import Reward from "@models/reward.model.js";
 import { ApiError } from "@utils/apiError.utils.js";
-import {
-  deleteFromR2,
-  uploadToR2,
-} from "@utils/r2.utils.js";
+import { uploadToR2 } from "@utils/r2.utils.js";
 import cache from '@utils/cache.utils.js';
 import { CreateRewardData, GetAllRewardsQuery } from "@interfaces/reward.interface.js";
+import { enqueueR2Delete } from "@queues/r2.queue.js";
+import logger from "@utils/logger.utils.js";
 
 class RewardService {
   // Create reward
@@ -109,7 +108,9 @@ class RewardService {
 
     if (imagePath) {
       if (reward.image?.public_id) {
-        await deleteFromR2(reward.image.public_id);
+        enqueueR2Delete(reward.image.public_id).catch((err) =>
+          logger.error(`reward failed to enqueue R2 delete: ${err.message}`)
+        );
       }
 
       const uploaded = await uploadToR2(imagePath);
@@ -173,7 +174,9 @@ class RewardService {
     }
 
     if (reward.image?.public_id) {
-      await deleteFromR2(reward.image.public_id);
+      enqueueR2Delete(reward.image.public_id).catch((err) =>
+        logger.error(`reward failed to enqueue R2 delete: ${err.message}`)
+      );
     }
 
     await Reward.findByIdAndDelete(id);

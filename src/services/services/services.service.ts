@@ -1,11 +1,10 @@
 import Service from '@models/service.model.js';
 import { ApiError } from '@utils/apiError.utils.js';
-import {
-  uploadToR2,
-  deleteFromR2,
-} from '@utils/r2.utils.js';
+import { uploadToR2 } from '@utils/r2.utils.js';
 import cache from '@utils/cache.utils.js'
 import { CreateServiceData, GetAllServicesQuery } from '@interfaces/services.interface.js';
+import { enqueueR2Delete } from '@queues/r2.queue.js';
+import logger from '@utils/logger.utils.js';
 
 class ServiceService {
   // Create service
@@ -133,7 +132,9 @@ class ServiceService {
     if (imagePath) {
       // Delete old image from Cloudinary if exists
       if (service.image?.public_id) {
-        await deleteFromR2(service.image.public_id);
+        enqueueR2Delete(service.image.public_id).catch((err) =>
+          logger.error(`service failed to enqueue R2 delete: ${err.message}`)
+        );
       }
 
       // Upload new image
@@ -195,7 +196,9 @@ class ServiceService {
     if (!service) throw new ApiError(404, "Service not found or not soft-deleted first");
 
     if (service.image?.public_id) {
-      await deleteFromR2(service.image.public_id);
+      enqueueR2Delete(service.image.public_id).catch((err) =>
+        logger.error(`service failed to enqueue R2 delete: ${err.message}`)
+      );
     }
 
     await Service.findByIdAndDelete(id);

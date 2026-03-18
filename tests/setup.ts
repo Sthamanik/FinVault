@@ -33,6 +33,11 @@ vi.mock("@config/mailer.config.js", () => ({
   },
 }));
 
+vi.mock("@queues/r2.queue.js", () => ({
+  enqueueR2Delete: vi.fn().mockResolvedValue(undefined),
+  default: {},
+}));
+
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   await mongoose.connect(mongo.getUri());

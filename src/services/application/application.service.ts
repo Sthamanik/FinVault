@@ -1,13 +1,11 @@
 import Application from "@models/application.model.js";
 import Career from "@models/career.model.js";
 import { ApiError } from "@utils/apiError.utils.js";
-import {
-  deleteFromR2,
-  uploadToR2,
-} from "@utils/r2.utils.js";
+import { uploadToR2 } from "@utils/r2.utils.js";
 import { CreateApplicationData, GetAllApplicationsQuery } from "@interfaces/application.interface.js";
 import { enqueueApplicationNotification, enqueueApplicationStatusNotification } from "@queues/email.queue.js";
 import logger from "@utils/logger.utils.js";
+import { enqueueR2Delete } from "@queues/r2.queue.js";
 
 class ApplicationService {
   // Create application
@@ -211,10 +209,14 @@ class ApplicationService {
     if (!application) throw new ApiError(404, "Application not found or not soft-deleted first");
 
     if (application.resume?.public_id) {
-      await deleteFromR2(application.resume.public_id);
+      enqueueR2Delete(application.resume.public_id).catch((err) =>
+        logger.error(`application failed to enqueue R2 delete: ${err.message}`)
+      );
     }
     if (application.coverLetterFile?.public_id) {
-      await deleteFromR2(application.coverLetterFile.public_id);
+      enqueueR2Delete(application.coverLetterFile.public_id).catch((err) =>
+        logger.error(`application failed to enqueue R2 delete: ${err.message}`)
+      );
     }
 
     await Application.findByIdAndDelete(id);

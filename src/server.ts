@@ -4,6 +4,7 @@ import connectDB from '@config/db.js';
 import logger from '@utils/logger.utils.js';
 import '@config/redis.config.js';
 import "@workers/email.worker.js";
+import "@workers/r2.worker.js"; 
 import { cleanStaleTmpFiles } from '@utils/cleanTmp.utils.js';
 
 const PORT = process.env.PORT || 5001;
