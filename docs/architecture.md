@@ -94,6 +94,11 @@ src/
 
 ---
 
+## ERD
+![Table design](assets/image.png)
+
+---
+
 ## Caching Strategy
 
 Resources are cached using **cache-aside with version-based invalidation**.
