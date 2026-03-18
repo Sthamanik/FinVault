@@ -1,24 +1,7 @@
 import Career from "@models/career.model.js";
 import { ApiError } from "@utils/apiError.utils.js";
 import cache from "@utils/cache.utils.js";
-
-interface CreateCareerData {
-  title: string;
-  department: string;
-  location: string;
-  type: string;
-  description: string;
-  requirements: string[];
-  openings?: number;
-  isActive?: boolean;
-}
-
-interface GetAllCareersQuery {
-  page?: number;
-  limit?: number;
-  isActive?: boolean;
-  search?: string;
-}
+import { CreateCareerData, GetAllCareersQuery } from "interfaces/career.interface.js";
 
 class CareerService {
   // Create career

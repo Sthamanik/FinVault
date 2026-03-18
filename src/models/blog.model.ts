@@ -94,6 +94,7 @@ blogSchema.pre('save', async function () {
 });
 
 // Add the compound index
+blogSchema.index({ title:1, category:1} );
 blogSchema.index({ status: 1, isDeleted: 1, createdAt: -1 });
 
 const Blog = mongoose.model<IBlog>('Blog', blogSchema);

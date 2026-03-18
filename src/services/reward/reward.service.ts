@@ -5,20 +5,7 @@ import {
   uploadOnCloudinary,
 } from "@utils/cloudinary.utils.js";
 import cache from '@utils/cache.utils.js';
-
-interface CreateRewardData {
-  title: string;
-  issuer: string;
-  description?: string;
-  credentialUrl?: string;
-  issueDate?: Date;
-}
-
-interface GetAllRewardsQuery {
-  page?: number;
-  limit?: number;
-  search?: string;
-}
+import { CreateRewardData, GetAllRewardsQuery } from "interfaces/reward.interface.js";
 
 class RewardService {
   // Create reward

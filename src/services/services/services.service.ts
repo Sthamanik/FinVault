@@ -5,24 +5,7 @@ import {
   deleteFromCloudinary,
 } from '@utils/cloudinary.utils.js';
 import cache from '@utils/cache.utils.js'
-
-interface CreateServiceData {
-  title: string;
-  shortDescription: string;
-  longDescription?: string;
-  ctaLink?: string;
-  investmentFocus?: string;
-  industriesPortfolio?: string[];
-  isActive?: boolean;
-  order?: number;
-}
-
-interface GetAllServicesQuery {
-  page?: number;
-  limit?: number;
-  isActive?: boolean;
-  search?: string;
-}
+import { CreateServiceData, GetAllServicesQuery } from 'interfaces/services.interface.js';
 
 class ServiceService {
   // Create service

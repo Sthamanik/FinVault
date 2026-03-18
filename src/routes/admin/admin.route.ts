@@ -26,13 +26,6 @@ class AdminRoute {
       asyncHandler(AdminController.login.bind(AdminController))
     );
 
-    this.router.post(
-      "/refresh-token",
-      authLimiter,
-      validateRefreshToken,
-      asyncHandler(AdminController.refreshAccessToken.bind(AdminController))
-    );
-
     // authenticated routes 
     this.router.post(
       "/logout",

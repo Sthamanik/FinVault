@@ -5,10 +5,10 @@ class CacheUtils{
     async getVersion(resource: string): Promise<number>{
         try {
             const data = await redis.get(`${resource}:version`);
-            return data? Number(data) : 1;
+            return data? Number(data) : 0;
         } catch (error) {
             logger.error(`Redis error: ${error}`);
-            return 1;
+            return 0;
         }
     }
 

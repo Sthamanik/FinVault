@@ -5,31 +5,32 @@ import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "@utils/cloudinary.utils.js";
-
-interface CreateBlogData {
-  title: string;
-  content: string;
-  author?: string;
-  tags?: string[];
-  category?: string;
-  status?: "draft" | "published";
-  metaTitle?: string;
-  metaDescription?: string;
-}
-
-interface GetAllBlogsQuery {
-  page?: number;
-  limit?: number;
-  status?: string;
-  category?: string;
-  tag?: string;
-  search?: string;
-}
+import { CreateBlogData, GetAllBlogsQuery } from "interfaces/blog.interface.js";
 
 class BlogService {
+  private async existingBlogTitleForCategory(
+    title: string,
+    category: string,
+    excludeId?: string
+  ): Promise<boolean> {
+      const query: Record<string, any> = { title, category, isDeleted: false };
+      if (excludeId) {
+          query._id = { $ne: excludeId };
+      }
+      const blog = await Blog.findOne(query);
+      return blog !== null;
+  }
+
   // Create blog
   async create(data: CreateBlogData, imagePath?: string) {
     let featuredImage: { url: string; public_id: string } | undefined;
+    
+    if (data.category) {
+      const exists = await this.existingBlogTitleForCategory(data.title, data.category);
+      if (exists) {
+          throw new ApiError(409, `Blog with same title already exists in category: ${data.category}`);
+      }
+    }
 
     if (imagePath) {
       const uploaded = await uploadOnCloudinary(imagePath);
@@ -172,6 +173,16 @@ class BlogService {
       throw new ApiError(404, "Blog not found");
     }
 
+    const checkTitle = data.title ?? blog.title;
+    const checkCategory = data.category ?? blog.category;
+
+    if (checkTitle && checkCategory) {
+        const exists = await this.existingBlogTitleForCategory(checkTitle, checkCategory as string, id);
+        if (exists) {
+            throw new ApiError(409, `Blog with same title already exists in category: ${checkCategory}`);
+        }
+    }
+
     let featuredImage = blog.featuredImage;
 
     if (imagePath) {
@@ -189,11 +200,8 @@ class BlogService {
       };
     }
 
-    const updated = await Blog.findByIdAndUpdate(
-      id,
-      { $set: { ...data, featuredImage } },
-      { returnDocument: "after", runValidators: true }
-    );
+    Object.assign(blog, data);
+    const updated = await blog.save();
 
     // delete the cache and update cache version
     await Promise.all([

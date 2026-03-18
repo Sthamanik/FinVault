@@ -13,29 +13,31 @@ class AdminController {
   // Register admin
   async register(req: Request, res: Response) {
     const data = await AdminService.register(req.body);
+    const {admin, accessToken, refreshToken} = data;
 
     res
       .status(201)
-      .cookie("accessToken", data.accessToken, {
+      .cookie("accessToken", accessToken, {
         ...this.cookieOptions,
         maxAge: 15 * 60 * 1000,
       }) // 15 min
-      .cookie("refreshToken", data.refreshToken, this.cookieOptions)
-      .json(new ApiResponse(201, data, "Admin registered successfully"));
+      .cookie("refreshToken", refreshToken, this.cookieOptions)
+      .json(new ApiResponse(201, admin, "Admin registered successfully"));
   }
 
   // Login admin
   async login(req: Request, res: Response) {
     const data = await AdminService.login(req.body);
+    const {admin, accessToken, refreshToken} = data;
 
     res
       .status(200)
-      .cookie("accessToken", data.accessToken, {
+      .cookie("accessToken", accessToken, {
         ...this.cookieOptions,
         maxAge: 15 * 60 * 1000,
       }) // 15 min
-      .cookie("refreshToken", data.refreshToken, this.cookieOptions)
-      .json(new ApiResponse(200, data, "Admin logged in successfully"));
+      .cookie("refreshToken", refreshToken, this.cookieOptions)
+      .json(new ApiResponse(200, admin, "Admin logged in successfully"));
   }
 
   // Logout admin
@@ -58,30 +60,6 @@ class AdminController {
       .clearCookie("accessToken", cookieOptions)
       .clearCookie("refreshToken", cookieOptions)
       .json(new ApiResponse(200, null, "Admin logged out successfully"));
-  }
-
-  // Refresh access token
-  async refreshAccessToken(req: Request, res: Response) {
-    const incomingRefreshToken =
-      req.cookies.refreshToken || req.body.refreshToken;
-
-    const data = await AdminService.refreshAccessToken(incomingRefreshToken);
-
-    const cookieOptions = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict" as const,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    };
-
-    res
-      .status(200)
-      .cookie("accessToken", data.accessToken, {
-        ...cookieOptions,
-        maxAge: 15 * 60 * 1000,
-      })
-      .cookie("refreshToken", data.refreshToken, cookieOptions)
-      .json(new ApiResponse(200, data, "Access token refreshed successfully"));
   }
 
   // Get current admin

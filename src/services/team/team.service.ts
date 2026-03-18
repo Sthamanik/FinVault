@@ -5,25 +5,7 @@ import {
   uploadOnCloudinary,
 } from "@utils/cloudinary.utils.js";
 import cache from '@utils/cache.utils.js';
-
-interface CreateTeamData {
-  name: string;
-  role: string;
-  bio?: string;
-  socialLinks?: {
-    linkedin?: string;
-    twitter?: string;
-  };
-  isActive?: boolean;
-  order?: number;
-}
-
-interface GetAllTeamsQuery {
-  page?: number;
-  limit?: number;
-  isActive?: boolean;
-  search?: string;
-}
+import { CreateTeamData, GetAllTeamsQuery } from "interfaces/team.interface.js";
 
 class TeamService {
   // Create team member

@@ -1,20 +1,8 @@
 import Contact from "@models/contact.model.js";
 import { ApiError } from "@utils/apiError.utils.js";
-
-interface CreateContactData {
-  name: string;
-  email: string;
-  phone?: string;
-  subject: string;
-  message: string;
-}
-
-interface GetAllContactsQuery {
-  page?: number;
-  limit?: number;
-  status?: string;
-  search?: string;
-}
+import { 
+  CreateContactData, GetAllContactsQuery 
+} from "interfaces/contact.interface.js";
 
 class ContactService {
   // Create contact

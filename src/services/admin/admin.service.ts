@@ -3,18 +3,8 @@ import { ApiError } from "@utils/apiError.utils.js";
 import {
   generateAccessToken,
   generateRefreshToken,
-  verifyRefreshToken,
 } from "@utils/jwt.utils.js";
-
-interface RegisterData {
-  email: string;
-  password: string;
-}
-
-interface LoginData {
-  email: string;
-  password: string;
-}
+import { LoginData, RegisterData } from "interfaces/admin.interface.js";
 
 class AdminService {
   // Register new admin
@@ -26,7 +16,6 @@ class AdminService {
     if (existingadmin) {
       throw new ApiError(409, "admin with email already exists");
     }
-
 
     // Create admin
     const admin = await Admin.create({
@@ -93,7 +82,7 @@ class AdminService {
   }
 
   // Logout admin
-  async logout(adminId: string) {
+  async logout(adminId: string){
     await Admin.findByIdAndUpdate(
       adminId,
       { $unset: { refreshToken: 1 } },
@@ -101,37 +90,6 @@ class AdminService {
     );
 
     return null;
-  }
-
-  // Refresh access token
-  async refreshAccessToken(incomingRefreshToken: string) {
-    if (!incomingRefreshToken) {
-      throw new ApiError(401, "Unauthorized request");
-    }
-
-    const decoded: any = verifyRefreshToken(incomingRefreshToken);
-
-    const admin = await Admin.findById(decoded._id);
-    if (!admin) {
-      throw new ApiError(401, "Invalid refresh token");
-    }
-
-    if (incomingRefreshToken !== admin.refreshToken) {
-      throw new ApiError(401, "Refresh token is expired or used");
-    }
-
-    // Generate new tokens
-    const accessToken = generateAccessToken(admin);
-    const refreshToken = generateRefreshToken(admin);
-
-    // Save new refresh token
-    admin.refreshToken = refreshToken;
-    await admin.save({ validateBeforeSave: false });
-
-    return {
-      accessToken,
-      refreshToken,
-    };
   }
 
   // Get current admin
@@ -146,7 +104,6 @@ class AdminService {
 
     return admin;
   }
-
 
   // Change password
   async changePassword(

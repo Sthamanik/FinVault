@@ -5,21 +5,7 @@ import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "@utils/cloudinary.utils.js";
-
-interface CreateApplicationData {
-  name: string;
-  email: string;
-  phone?: string;
-  coverLetter?: string;
-}
-
-interface GetAllApplicationsQuery {
-  page?: number;
-  limit?: number;
-  status?: string;
-  jobId?: string;
-  search?: string;
-}
+import { CreateApplicationData, GetAllApplicationsQuery } from "interfaces/application.interface.js";
 
 class ApplicationService {
   // Create application
