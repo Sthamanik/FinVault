@@ -2,10 +2,12 @@ import Application from "@models/application.model.js";
 import Career from "@models/career.model.js";
 import { ApiError } from "@utils/apiError.utils.js";
 import {
-  deleteFromCloudinary,
-  uploadOnCloudinary,
-} from "@utils/cloudinary.utils.js";
-import { CreateApplicationData, GetAllApplicationsQuery } from "interfaces/application.interface.js";
+  deleteFromR2,
+  uploadToR2,
+} from "@utils/r2.utils.js";
+import { CreateApplicationData, GetAllApplicationsQuery } from "@interfaces/application.interface.js";
+import { enqueueApplicationNotification, enqueueApplicationStatusNotification } from "@queues/email.queue.js";
+import logger from "@utils/logger.utils.js";
 
 class ApplicationService {
   // Create application
@@ -35,7 +37,7 @@ class ApplicationService {
       throw new ApiError(400, "Resume file is required");
     }
 
-    const uploadedResume = await uploadOnCloudinary(resumePath);
+    const uploadedResume = await uploadToR2(resumePath);
     if (!uploadedResume) {
       throw new ApiError(500, "Failed to upload resume");
     }
@@ -48,7 +50,7 @@ class ApplicationService {
       | undefined;
 
     if (coverLetterFilePath) {
-      const uploadedCover = await uploadOnCloudinary(coverLetterFilePath);
+      const uploadedCover = await uploadToR2(coverLetterFilePath);
       if (!uploadedCover) {
         throw new ApiError(500, "Failed to upload cover letter file");
       }
@@ -67,6 +69,18 @@ class ApplicationService {
       },
       ...(coverLetterFile && { coverLetterFile }),
     });
+
+    // Enqueue — fire-and-forget
+    enqueueApplicationNotification({
+      applicantName: application.name,
+      applicantEmail: application.email,
+      phone: application.phone,
+      jobTitle: career.title,   // career is already fetched above in your existing code
+      jobId: jobId,
+      coverLetter: application.coverLetter,
+    }).catch((err) =>
+      logger.error(`[application.service] Failed to enqueue email: ${err.message}`)
+    );
 
     return application;
   }
@@ -146,36 +160,64 @@ class ApplicationService {
       throw new ApiError(404, "Application not found");
     }
 
+    const oldStatus = application.status;
     const updated = await Application.findByIdAndUpdate(
       id,
       { $set: { status } },
       { returnDocument: "after" }
     );
 
-    return updated;
+    // Enqueue
+    Career.findById(application.jobId)
+      .then((career) => {
+        if (!career) return;
+        return enqueueApplicationStatusNotification({
+          applicantName: application.name,
+          applicantEmail: application.email,
+          jobTitle: career.title,
+          oldStatus,
+          newStatus: status,
+          applicationId: id,
+        });
+      })
+      .catch((err) =>
+        logger.error(`[application.service] Failed to enqueue status email: ${err.message}`)
+      );
+
+      return updated;
   }
 
-  // Soft delete application
+  // soft delete 
   async delete(id: string) {
-    const application = await Application.findOne({
-      _id: id,
-      isDeleted: false,
-    });
-
-    if (!application) {
-      throw new ApiError(404, "Application not found");
-    }
-
-    if (application.resume?.public_id) {
-      await deleteFromCloudinary(application.resume.public_id);
-    }
-
-    if (application.coverLetterFile?.public_id) {
-      await deleteFromCloudinary(application.coverLetterFile.public_id);
-    }
+    const application = await Application.findOne({ _id: id, isDeleted: false });
+    if (!application) throw new ApiError(404, "Application not found");
 
     await Application.findByIdAndUpdate(id, { $set: { isDeleted: true } });
+    return null;
+  }
 
+  // restore the soft deleted one
+  async restore(id: string) {
+    const application = await Application.findOne({ _id: id, isDeleted: true });
+    if (!application) throw new ApiError(404, "Application not found or not deleted");
+
+    await Application.findByIdAndUpdate(id, { $set: { isDeleted: false } });
+    return null;
+  }
+
+  // hard delete — delete resume + cover letter from storage
+  async hardDelete(id: string) {
+    const application = await Application.findOne({ _id: id, isDeleted: true });
+    if (!application) throw new ApiError(404, "Application not found or not soft-deleted first");
+
+    if (application.resume?.public_id) {
+      await deleteFromR2(application.resume.public_id);
+    }
+    if (application.coverLetterFile?.public_id) {
+      await deleteFromR2(application.coverLetterFile.public_id);
+    }
+
+    await Application.findByIdAndDelete(id);
     return null;
   }
 }

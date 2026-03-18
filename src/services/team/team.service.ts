@@ -1,11 +1,11 @@
 import Team from "@models/team.model.js";
 import { ApiError } from "@utils/apiError.utils.js";
 import {
-  deleteFromCloudinary,
-  uploadOnCloudinary,
-} from "@utils/cloudinary.utils.js";
+  deleteFromR2,
+  uploadToR2,
+} from "@utils/r2.utils.js";
 import cache from '@utils/cache.utils.js';
-import { CreateTeamData, GetAllTeamsQuery } from "interfaces/team.interface.js";
+import { CreateTeamData, GetAllTeamsQuery } from "@interfaces/team.interface.js";
 
 class TeamService {
   // Create team member
@@ -13,7 +13,7 @@ class TeamService {
     let profilePhoto: { url: string; public_id: string } | undefined;
 
     if (imagePath) {
-      const uploaded = await uploadOnCloudinary(imagePath);
+      const uploaded = await uploadToR2(imagePath);
       if (!uploaded) {
         throw new ApiError(500, "Failed to upload profile photo");
       }
@@ -120,10 +120,10 @@ class TeamService {
 
     if (imagePath) {
       if (team.profilePhoto?.public_id) {
-        await deleteFromCloudinary(team.profilePhoto.public_id);
+        await deleteFromR2(team.profilePhoto.public_id);
       }
 
-      const uploaded = await uploadOnCloudinary(imagePath);
+      const uploaded = await uploadToR2(imagePath);
       if (!uploaded) {
         throw new ApiError(500, "Failed to upload profile photo");
       }
@@ -147,25 +147,51 @@ class TeamService {
     return updated;
   }
 
-  // Soft delete team member
+  // soft delete the team
   async delete(id: string) {
     const team = await Team.findOne({ _id: id, isDeleted: false });
-
     if (!team) {
       throw new ApiError(404, "Team member not found");
     }
 
-    if (team.profilePhoto?.public_id) {
-      await deleteFromCloudinary(team.profilePhoto.public_id);
-    }
-
     await Team.findByIdAndUpdate(id, { $set: { isDeleted: true } });
 
-    // remove team key and increment update version 
     await Promise.all([
       cache.delete(`team:id:${id}`),
-      cache.incrementVersion('team')
-    ])
+      cache.incrementVersion("team"),
+    ]);
+    return null;
+  }
+
+  // restore the soft deleted one
+  async restore(id: string) {
+    const team = await Team.findOne({ _id: id, isDeleted: true });
+    if (!team) throw new ApiError(404, "Team member not found or not deleted");
+
+    await Team.findByIdAndUpdate(id, { $set: { isDeleted: false } });
+
+    await Promise.all([
+      cache.delete(`team:id:${id}`),
+      cache.incrementVersion("team"),
+    ]);
+    return null;
+  }
+
+  // hard delete
+  async hardDelete(id: string) {
+    const team = await Team.findOne({ _id: id, isDeleted: true });
+    if (!team) throw new ApiError(404, "Team member not found or not soft-deleted first");
+
+    if (team.profilePhoto?.public_id) {
+      await deleteFromR2(team.profilePhoto.public_id);
+    }
+
+    await Team.findByIdAndDelete(id);
+
+    await Promise.all([
+      cache.delete(`team:id:${id}`),
+      cache.incrementVersion("team"),
+    ]);
     return null;
   }
 

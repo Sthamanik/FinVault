@@ -16,6 +16,7 @@ import teamRouter from "@routes/team/team.route.js";
 import applicationRouter from "@routes/application/application.route.js";
 import logger from '@utils/logger.utils.js';
 import { pinoHttp } from "pino-http";
+import cleanupTmpOnError from "@middlewares/cleanupTmp.middleware.js";
 
 const app: Express = express();
 
@@ -64,7 +65,7 @@ app.use((req, res) => {
   });
 });
 
-// Error handling middleware (should be last)
+app.use(cleanupTmpOnError)
 app.use(errorHandler as any);
 
 export default app;

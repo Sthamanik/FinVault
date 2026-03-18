@@ -1,7 +1,7 @@
 import Career from "@models/career.model.js";
 import { ApiError } from "@utils/apiError.utils.js";
 import cache from "@utils/cache.utils.js";
-import { CreateCareerData, GetAllCareersQuery } from "interfaces/career.interface.js";
+import { CreateCareerData, GetAllCareersQuery } from "@interfaces/career.interface.js";
 
 class CareerService {
   // Create career
@@ -150,6 +150,36 @@ class CareerService {
       cache.delete(`career:id:${id}`),
       cache.delete(`career:slug:${career.slug}`),
       cache.incrementVersion('career')
+    ]);
+    return null;
+  }
+
+  // restore the soft delete
+  async restore(id: string) {
+    const career = await Career.findOne({ _id: id, isDeleted: true });
+    if (!career) throw new ApiError(404, "Career not found or not deleted");
+
+    await Career.findByIdAndUpdate(id, { $set: { isDeleted: false } });
+
+    await Promise.all([
+      cache.delete(`career:id:${id}`),
+      cache.delete(`career:slug:${career.slug}`),
+      cache.incrementVersion("career"),
+    ]);
+    return null;
+  }
+
+  // hard delete 
+  async hardDelete(id: string) {
+    const career = await Career.findOne({ _id: id, isDeleted: true });
+    if (!career) throw new ApiError(404, "Career not found or not soft-deleted first");
+
+    await Career.findByIdAndDelete(id);
+
+    await Promise.all([
+      cache.delete(`career:id:${id}`),
+      cache.delete(`career:slug:${career.slug}`),
+      cache.incrementVersion("career"),
     ]);
     return null;
   }

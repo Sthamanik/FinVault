@@ -1,11 +1,11 @@
 import Service from '@models/service.model.js';
 import { ApiError } from '@utils/apiError.utils.js';
 import {
-  uploadOnCloudinary,
-  deleteFromCloudinary,
-} from '@utils/cloudinary.utils.js';
+  uploadToR2,
+  deleteFromR2,
+} from '@utils/r2.utils.js';
 import cache from '@utils/cache.utils.js'
-import { CreateServiceData, GetAllServicesQuery } from 'interfaces/services.interface.js';
+import { CreateServiceData, GetAllServicesQuery } from '@interfaces/services.interface.js';
 
 class ServiceService {
   // Create service
@@ -13,7 +13,7 @@ class ServiceService {
     let image: { url: string; public_id: string } | undefined;
 
     if (imagePath) {
-      const uploaded = await uploadOnCloudinary(imagePath);
+      const uploaded = await uploadToR2(imagePath);
       if (!uploaded) {
         throw new ApiError(500, 'Failed to upload image to Cloudinary');
       }
@@ -133,11 +133,11 @@ class ServiceService {
     if (imagePath) {
       // Delete old image from Cloudinary if exists
       if (service.image?.public_id) {
-        await deleteFromCloudinary(service.image.public_id);
+        await deleteFromR2(service.image.public_id);
       }
 
       // Upload new image
-      const uploaded = await uploadOnCloudinary(imagePath);
+      const uploaded = await uploadToR2(imagePath);
       if (!uploaded) {
         throw new ApiError(500, 'Failed to upload image to Cloudinary');
       }
@@ -159,26 +159,51 @@ class ServiceService {
     return updated;
   }
 
-  // Soft delete service
+  // soft delete the service 
   async delete(id: string) {
     const service = await Service.findOne({ _id: id, isDeleted: false });
-
-    if (!service) {
-      throw new ApiError(404, 'Service not found');
-    }
-
-    // Delete image from Cloudinary if exists
-    if (service.image?.public_id) {
-      await deleteFromCloudinary(service.image.public_id);
-    }
+    if (!service) throw new ApiError(404, "Service not found");
 
     await Service.findByIdAndUpdate(id, { $set: { isDeleted: true } });
 
-    // delete the cache and update the version
     await Promise.all([
       cache.delete(`service:id:${id}`),
       cache.delete(`service:slug:${service.slug}`),
-      cache.incrementVersion(`service`)
+      cache.incrementVersion("service"),
+    ]);
+    return null;
+  }
+
+  // restore the service
+  async restore(id: string) {
+    const service = await Service.findOne({ _id: id, isDeleted: true });
+    if (!service) throw new ApiError(404, "Service not found or not deleted");
+
+    await Service.findByIdAndUpdate(id, { $set: { isDeleted: false } });
+
+    await Promise.all([
+      cache.delete(`service:id:${id}`),
+      cache.delete(`service:slug:${service.slug}`),
+      cache.incrementVersion("service"),
+    ]);
+    return null;
+  }
+
+  // hard delete the service
+  async hardDelete(id: string) {
+    const service = await Service.findOne({ _id: id, isDeleted: true });
+    if (!service) throw new ApiError(404, "Service not found or not soft-deleted first");
+
+    if (service.image?.public_id) {
+      await deleteFromR2(service.image.public_id);
+    }
+
+    await Service.findByIdAndDelete(id);
+
+    await Promise.all([
+      cache.delete(`service:id:${id}`),
+      cache.delete(`service:slug:${service.slug}`),
+      cache.incrementVersion("service"),
     ]);
     return null;
   }

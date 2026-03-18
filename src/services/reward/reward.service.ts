@@ -1,11 +1,11 @@
 import Reward from "@models/reward.model.js";
 import { ApiError } from "@utils/apiError.utils.js";
 import {
-  deleteFromCloudinary,
-  uploadOnCloudinary,
-} from "@utils/cloudinary.utils.js";
+  deleteFromR2,
+  uploadToR2,
+} from "@utils/r2.utils.js";
 import cache from '@utils/cache.utils.js';
-import { CreateRewardData, GetAllRewardsQuery } from "interfaces/reward.interface.js";
+import { CreateRewardData, GetAllRewardsQuery } from "@interfaces/reward.interface.js";
 
 class RewardService {
   // Create reward
@@ -13,7 +13,7 @@ class RewardService {
     let image: { url: string; public_id: string } | undefined;
 
     if (imagePath) {
-      const uploaded = await uploadOnCloudinary(imagePath);
+      const uploaded = await uploadToR2(imagePath);
       if (!uploaded) {
         throw new ApiError(500, "Failed to upload image");
       }
@@ -109,10 +109,10 @@ class RewardService {
 
     if (imagePath) {
       if (reward.image?.public_id) {
-        await deleteFromCloudinary(reward.image.public_id);
+        await deleteFromR2(reward.image.public_id);
       }
 
-      const uploaded = await uploadOnCloudinary(imagePath);
+      const uploaded = await uploadToR2(imagePath);
       if (!uploaded) {
         throw new ApiError(500, "Failed to upload image");
       }
@@ -133,24 +133,54 @@ class RewardService {
     return updated;
   }
 
-  // Soft delete reward
+  // soft delete the reward
   async delete(id: string) {
     const reward = await Reward.findOne({ _id: id, isDeleted: false });
-
     if (!reward) {
       throw new ApiError(404, "Reward not found");
     }
 
-    if (reward.image?.public_id) {
-      await deleteFromCloudinary(reward.image.public_id);
-    }
-
     await Reward.findByIdAndUpdate(id, { $set: { isDeleted: true } });
 
-    // delete the reward key and update reward version
     await Promise.all([
       cache.delete(`reward:id:${id}`),
-      cache.incrementVersion('reward')
+      cache.incrementVersion("reward"),
+    ]);
+    return null;
+  }
+
+  // restore the soft deleted one
+  async restore(id: string) {
+    const reward = await Reward.findOne({ _id: id, isDeleted: true });
+    if (!reward) {
+      throw new ApiError(404, "Reward not found or not deleted");
+    }
+
+    await Reward.findByIdAndUpdate(id, { $set: { isDeleted: false } });
+
+    await Promise.all([
+      cache.delete(`reward:id:${id}`),
+      cache.incrementVersion("reward"),
+    ]);
+    return null;
+  }
+
+  // hard delete
+  async hardDelete(id: string) {
+    const reward = await Reward.findOne({ _id: id, isDeleted: true });
+    if (!reward) {
+      throw new ApiError(404, "Reward not found or not soft-deleted first");
+    }
+
+    if (reward.image?.public_id) {
+      await deleteFromR2(reward.image.public_id);
+    }
+
+    await Reward.findByIdAndDelete(id);
+
+    await Promise.all([
+      cache.delete(`reward:id:${id}`),
+      cache.incrementVersion("reward"),
     ]);
     return null;
   }

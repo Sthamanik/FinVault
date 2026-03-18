@@ -2,10 +2,10 @@ import Blog from "@models/blog.model.js";
 import { ApiError } from "@utils/apiError.utils.js";
 import cache from "@utils/cache.utils.js";
 import {
-  deleteFromCloudinary,
-  uploadOnCloudinary,
-} from "@utils/cloudinary.utils.js";
-import { CreateBlogData, GetAllBlogsQuery } from "interfaces/blog.interface.js";
+  deleteFromR2,
+  uploadToR2,
+} from "@utils/r2.utils.js";
+import { CreateBlogData, GetAllBlogsQuery } from "@interfaces/blog.interface.js";
 
 class BlogService {
   // Create blog
@@ -13,7 +13,7 @@ class BlogService {
     let featuredImage: { url: string; public_id: string } | undefined;
     
     if (imagePath) {
-      const uploaded = await uploadOnCloudinary(imagePath);
+      const uploaded = await uploadToR2(imagePath);
       if (!uploaded) {
         throw new ApiError(500, "Failed to upload featured image");
       }
@@ -157,10 +157,10 @@ class BlogService {
 
     if (imagePath) {
       if (blog.featuredImage?.public_id) {
-        await deleteFromCloudinary(blog.featuredImage.public_id);
+        await deleteFromR2(blog.featuredImage.public_id);
       }
 
-      const uploaded = await uploadOnCloudinary(imagePath);
+      const uploaded = await uploadToR2(imagePath);
       if (!uploaded) {
         throw new ApiError(500, "Failed to upload featured image");
       }
@@ -183,27 +183,52 @@ class BlogService {
     return updated;
   }
 
-  // Soft delete blog
+  // soft delete 
   async delete(id: string) {
     const blog = await Blog.findOne({ _id: id, isDeleted: false });
-
-    if (!blog) {
-      throw new ApiError(404, "Blog not found");
-    }
-
-    if (blog.featuredImage?.public_id) {
-      await deleteFromCloudinary(blog.featuredImage.public_id);
-    }
+    if (!blog) throw new ApiError(404, "Blog not found");
 
     await Blog.findByIdAndUpdate(id, { $set: { isDeleted: true } });
 
-    // delete the cache and update cache version
     await Promise.all([
       cache.delete(`blog:id:${id}`),
       cache.delete(`blog:slug:${blog.slug}`),
-      cache.incrementVersion('blog')
+      cache.incrementVersion("blog"),
     ]);
+    return null;
+  }
 
+  // restore the soft deleted one
+  async restore(id: string) {
+    const blog = await Blog.findOne({ _id: id, isDeleted: true });
+    if (!blog) throw new ApiError(404, "Blog not found or not deleted");
+
+    await Blog.findByIdAndUpdate(id, { $set: { isDeleted: false } });
+
+    await Promise.all([
+      cache.delete(`blog:id:${id}`),
+      cache.delete(`blog:slug:${blog.slug}`),
+      cache.incrementVersion("blog"),
+    ]);
+    return null;
+  }
+
+  // hard delete the soft deleted ones 
+  async hardDelete(id: string) {
+    const blog = await Blog.findOne({ _id: id, isDeleted: true });
+    if (!blog) throw new ApiError(404, "Blog not found or not soft-deleted first");
+
+    if (blog.featuredImage?.public_id) {
+      await deleteFromR2(blog.featuredImage.public_id);
+    }
+
+    await Blog.findByIdAndDelete(id);
+
+    await Promise.all([
+      cache.delete(`blog:id:${id}`),
+      cache.delete(`blog:slug:${blog.slug}`),
+      cache.incrementVersion("blog"),
+    ]);
     return null;
   }
 }

@@ -4,7 +4,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "@utils/jwt.utils.js";
-import { LoginData, RegisterData } from "interfaces/admin.interface.js";
+import { LoginData, RegisterData } from "@interfaces/admin.interface.js";
 
 class AdminService {
   // Register new admin

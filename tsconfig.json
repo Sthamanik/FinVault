@@ -21,7 +21,11 @@
       "@routes/*": ["routes/*"],
       "@utils/*": ["utils/*"],
       "@validations/*": ["validations/*"],
-      "@models/*": ["models/*"]
+      "@models/*": ["models/*"],
+      "@interfaces/*": ["interfaces/*"],
+      "@queues/*": ["queues/*"],
+      "@templates/*": ["templates/*"],
+      "@workers/*": ["workers/*"]
     }
   },
 

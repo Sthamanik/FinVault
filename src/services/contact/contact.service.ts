@@ -2,12 +2,25 @@ import Contact from "@models/contact.model.js";
 import { ApiError } from "@utils/apiError.utils.js";
 import { 
   CreateContactData, GetAllContactsQuery 
-} from "interfaces/contact.interface.js";
+} from "@interfaces/contact.interface.js";
+import logger from "@utils/logger.utils.js";
+import { enqueueContactNotification } from "@queues/email.queue.js";
 
 class ContactService {
   // Create contact
   async create(data: CreateContactData) {
     const contact = await Contact.create(data);
+
+    // Fire-and-forget 
+    enqueueContactNotification({
+      name: contact.name,
+      email: contact.email,
+      phone: contact.phone,
+      subject: contact.subject,
+      message: contact.message,
+    }).catch((err) =>
+      logger.error(`[contact.service] Failed to enqueue email: ${err.message}`)
+    );
     return contact;
   }
 
@@ -95,6 +108,28 @@ class ContactService {
 
     await Contact.findByIdAndUpdate(id, { $set: { isDeleted: true } });
 
+    return null;
+  }
+
+  // ADD: restore
+  async restore(id: string) {
+    const contact = await Contact.findOne({ _id: id, isDeleted: true });
+    if (!contact) {
+      throw new ApiError(404, "Contact not found or not deleted");
+    }
+
+    await Contact.findByIdAndUpdate(id, { $set: { isDeleted: false } });
+    return null;
+  }
+
+  // ADD: hard delete
+  async hardDelete(id: string) {
+    const contact = await Contact.findOne({ _id: id, isDeleted: true });
+    if (!contact) {
+      throw new ApiError(404, "Contact not found or not soft-deleted first");
+    }
+
+    await Contact.findByIdAndDelete(id);
     return null;
   }
 }
