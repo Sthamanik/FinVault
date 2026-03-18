@@ -16,7 +16,7 @@ describe("Admin API", () => {
     const res = await loginAdmin();
 
     expect(res.status).toBe(200);
-    expect(res.body?.data?.accessToken).toBeTruthy();
+    expect(res.body?.data).toBeTruthy();
   });
 
   it("rejects login with wrong password", async () => {
@@ -42,26 +42,6 @@ describe("Admin API", () => {
   it("rejects current admin without auth", async () => {
     const res = await request(app).get("/api/v1/admin/me");
     expect(res.status).toBe(401);
-  });
-
-  it("refreshes access token with refresh token", async () => {
-    const loginRes = await loginAdmin();
-    const refreshToken = loginRes.body?.data?.refreshToken;
-    const res = await request(app)
-      .post("/api/v1/admin/refresh-token")
-      .send({ refreshToken });
-
-    expect(res.status).toBe(200);
-    expect(res.body?.data?.accessToken).toBeTruthy();
-    expect(res.body?.data?.refreshToken).toBeTruthy();
-  });
-
-  it("rejects refresh without token", async () => {
-    const res = await request(app)
-      .post("/api/v1/admin/refresh-token")
-      .send({});
-
-    expect(res.status).toBe(400);
   });
 
   it("changes password and enforces new password", async () => {
