@@ -28,7 +28,6 @@ const blogSchema = new Schema<IBlog>(
     },
     slug: {
       type: String,
-      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -94,7 +93,14 @@ blogSchema.pre('save', async function () {
 });
 
 // Add the compound index
-blogSchema.index({ title:1, category:1} );
+blogSchema.index(
+  { title: 1, isDeleted: 1 },
+  { unique: true, name: 'unique_blog_title' }
+);
+blogSchema.index(
+  { slug: 1, isDeleted: 1 },
+  { unique: true, name: 'unique_blog_slug' }
+);;
 blogSchema.index({ status: 1, isDeleted: 1, createdAt: -1 });
 
 const Blog = mongoose.model<IBlog>('Blog', blogSchema);

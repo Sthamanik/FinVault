@@ -57,6 +57,11 @@ const teamSchema = new Schema<ITeam>(
   { timestamps: true }
 );
 
+// add composite indexes
+teamSchema.index(
+  { name: 1, role: 1, isDeleted: 1 },
+  { unique: true, name: 'unique_team_member' }
+);
 teamSchema.index({ isActive: 1, isDeleted: 1, order: 1 });
 
 const Team = mongoose.model<ITeam>('Team', teamSchema);

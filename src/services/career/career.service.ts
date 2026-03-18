@@ -6,17 +6,6 @@ import { CreateCareerData, GetAllCareersQuery } from "interfaces/career.interfac
 class CareerService {
   // Create career
   async create(data: CreateCareerData) {
-    const existing = await Career.findOne({
-      title: data.title,
-      department: data.department,
-      location: data.location,
-      type: data.type,
-      isDeleted: false,
-      isActive: true
-    });
-    if (existing){
-      throw new ApiError(409, "Duplicate career: Career already exists")
-    }
     const career = await Career.create(data);
 
     // update the cache version and return

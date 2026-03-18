@@ -59,11 +59,11 @@ export const verifyJWT = asyncHandler(async (req: Request, res: Response, next: 
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict' as const,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // Bug 3 fix: 7 days
-  };
+    maxAge: 3 * 24 * 60 * 60 * 1000, 
+  }
 
   res
-    .cookie('accessToken', newAccessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 })
+    .cookie('accessToken', newAccessToken, { ...cookieOptions, maxAge: 5 * 60 * 1000 })
     .cookie('refreshToken', newRefreshToken, cookieOptions);
 
   req.user = admin;

@@ -94,6 +94,15 @@ serviceSchema.pre('save', async function () {
   this.slug = await createUniqueSlug(this.title, mongoose.models.Service, this._id);
 });
 
+// Add composite indexes
+serviceSchema.index(
+  { title: 1, isDeleted: 1 },
+  { unique: true, name: 'unique_service_title' }
+);
+serviceSchema.index(
+  { slug: 1, isDeleted: 1 },
+  { unique: true, name: 'unique_service_slug' }
+);
 serviceSchema.index({ isActive: 1, isDeleted: 1, order: 1 });
 
 const Service = mongoose.model<IService>('Service', serviceSchema);

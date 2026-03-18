@@ -26,11 +26,13 @@ vi.mock("@utils/cloudinary.utils.js", () => ({
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   await mongoose.connect(mongo.getUri());
+  await mongoose.syncIndexes();
 }, 60000);
 
 afterEach(async () => {
   if (mongoose.connection.db) {
     await mongoose.connection.db.dropDatabase();
+    await mongoose.syncIndexes();
   }
 });
 

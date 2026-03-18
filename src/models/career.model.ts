@@ -75,6 +75,15 @@ careerSchema.pre('save', async function () {
     this.slug = await createUniqueSlug(this.title, mongoose.models.Career, this._id);
 });
 
+// add composite index
+careerSchema.index(
+  { title: 1, department: 1, location: 1, type: 1, isDeleted: 1 },
+  { unique: true, name: 'unique_career_posting' }
+);
+careerSchema.index(
+  { slug: 1, isDeleted: 1 },
+  { unique: true, name: 'unique_career_slug' }
+);
 careerSchema.index({ isActive: 1, isDeleted: 1, createdAt: -1 });
 
 const Career = mongoose.model<ICareer>('Career', careerSchema);

@@ -48,6 +48,11 @@ const rewardSchema = new Schema<IReward>(
   { timestamps: true }
 );
 
+// add Composite indexes
+rewardSchema.index(
+  { title: 1, issuer: 1, isDeleted: 1 },
+  { unique: true, name: 'unique_reward' }
+);
 rewardSchema.index({ isDeleted: 1, createdAt: -1 });
 
 const Reward = mongoose.model<IReward>('Reward', rewardSchema);
