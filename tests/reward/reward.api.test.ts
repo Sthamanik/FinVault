@@ -85,7 +85,7 @@ describe("Reward API", () => {
     expect(res.body?.data?.title).toBe("Updated Award");
   });
 
-  it("deletes a reward with auth", async () => {
+  it("soft deletes, restores, and hard deletes a reward with auth", async () => {
     const agent = await registerAndGetAgent();
     const created = await agent
       .post("/api/v1/rewards")
@@ -93,10 +93,25 @@ describe("Reward API", () => {
       .field("issuer", "Issuer 1");
 
     const id = created.body?.data?._id;
-    const delRes = await agent.delete(`/api/v1/rewards/${id}`);
+    const delRes = await agent.patch(`/api/v1/rewards/${id}/delete`);
     expect(delRes.status).toBe(200);
 
     const getRes = await request(app).get(`/api/v1/rewards/${id}`);
     expect(getRes.status).toBe(404);
+
+    const restoreRes = await agent.patch(`/api/v1/rewards/${id}/restore`);
+    expect(restoreRes.status).toBe(200);
+
+    const restoredRes = await request(app).get(`/api/v1/rewards/${id}`);
+    expect(restoredRes.status).toBe(200);
+
+    const softDeleteAgainRes = await agent.patch(`/api/v1/rewards/${id}/delete`);
+    expect(softDeleteAgainRes.status).toBe(200);
+
+    const hardDeleteRes = await agent.delete(`/api/v1/rewards/${id}/hard-delete`);
+    expect(hardDeleteRes.status).toBe(200);
+
+    const finalGetRes = await request(app).get(`/api/v1/rewards/${id}`);
+    expect(finalGetRes.status).toBe(404);
   });
 });

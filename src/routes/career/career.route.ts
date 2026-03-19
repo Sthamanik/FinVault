@@ -53,11 +53,25 @@ class CareerRoute {
       asyncHandler(CareerController.update.bind(CareerController))
     );
 
-    this.router.delete(
-      "/:id",
+    this.router.patch(
+      "/:id/delete",
       verifyJWT,
       authenticatedLimiter,
       asyncHandler(CareerController.delete.bind(CareerController))
+    );
+
+    this.router.patch(
+      "/:id/restore",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(CareerController.restore.bind(CareerController))
+    );
+
+    this.router.delete(
+      "/:id/hard-delete",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(CareerController.hardDelete.bind(CareerController))
     );
 
     this.router.patch(

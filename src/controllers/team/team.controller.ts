@@ -56,7 +56,7 @@ class TeamController {
       .json(new ApiResponse(200, team, "Team member updated successfully"));
   }
 
-  // Delete team member
+  // Soft delete team member
   async delete(req: Request, res: Response) {
     const { id } = req.params;
 
@@ -65,6 +65,28 @@ class TeamController {
     res
       .status(200)
       .json(new ApiResponse(200, null, "Team member deleted successfully"));
+  }
+
+  // restore soft deleted team member
+  async restore(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await TeamService.restore(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, "Team member restored successfully"));
+  }
+
+  // Delete team member
+  async hardDelete(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await TeamService.hardDelete(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, "Team member deleted permanently"));
   }
 
   // Toggle isActive

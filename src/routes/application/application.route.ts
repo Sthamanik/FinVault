@@ -53,11 +53,25 @@ class ApplicationRoute {
       asyncHandler(ApplicationController.updateStatus.bind(ApplicationController))
     );
 
-    this.router.delete(
-      "/:id",
+    this.router.patch(
+      "/:id/delete",
       verifyJWT,
       authenticatedLimiter,
       asyncHandler(ApplicationController.delete.bind(ApplicationController))
+    );
+
+    this.router.patch(
+      "/:id/restore",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(ApplicationController.restore.bind(ApplicationController))
+    );
+
+    this.router.delete(
+      "/:id/hard-delete",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(ApplicationController.hardDelete.bind(ApplicationController))
     );
   }
 }

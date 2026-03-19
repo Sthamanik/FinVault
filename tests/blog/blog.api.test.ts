@@ -123,7 +123,7 @@ describe("Blog API", () => {
     expect(res.body?.data?.title).toBe("Updated Blog");
   });
 
-  it("deletes a blog with auth", async () => {
+  it("soft deletes, restores, and hard deletes a blog with auth", async () => {
     const agent = await registerAndGetAgent();
     const created = await agent
       .post("/api/v1/blogs")
@@ -131,10 +131,25 @@ describe("Blog API", () => {
       .field("content", "Hello world");
 
     const id = created.body?.data?._id;
-    const delRes = await agent.delete(`/api/v1/blogs/${id}`);
+    const delRes = await agent.patch(`/api/v1/blogs/${id}/delete`);
     expect(delRes.status).toBe(200);
 
     const getRes = await request(app).get("/api/v1/blogs/slug/blog-one");
     expect(getRes.status).toBe(404);
+
+    const restoreRes = await agent.patch(`/api/v1/blogs/${id}/restore`);
+    expect(restoreRes.status).toBe(200);
+
+    const restoredRes = await request(app).get("/api/v1/blogs/slug/blog-one");
+    expect(restoredRes.status).toBe(200);
+
+    const softDeleteAgainRes = await agent.patch(`/api/v1/blogs/${id}/delete`);
+    expect(softDeleteAgainRes.status).toBe(200);
+
+    const hardDeleteRes = await agent.delete(`/api/v1/blogs/${id}/hard-delete`);
+    expect(hardDeleteRes.status).toBe(200);
+
+    const finalGetRes = await request(app).get("/api/v1/blogs/slug/blog-one");
+    expect(finalGetRes.status).toBe(404);
   });
 });

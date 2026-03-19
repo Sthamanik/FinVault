@@ -55,11 +55,25 @@ class ServiceRoute {
       asyncHandler(ServiceController.update.bind(ServiceController))
     );
 
-    this.router.delete(
-      '/:id',
+    this.router.patch(
+      '/:id/delete',
       verifyJWT,
       authenticatedLimiter,
       asyncHandler(ServiceController.delete.bind(ServiceController))
+    );
+
+    this.router.patch(
+      '/:id/restore',
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(ServiceController.restore.bind(ServiceController))
+    );
+
+    this.router.delete(
+      '/:id/hard-delete',
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(ServiceController.hardDelete.bind(ServiceController))
     );
 
     this.router.patch(

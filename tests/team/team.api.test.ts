@@ -106,7 +106,7 @@ describe("Team API", () => {
     expect(res.body?.data?.isActive).toBe(false);
   });
 
-  it("deletes a team member with auth", async () => {
+  it("soft deletes, restores, and hard deletes a team member with auth", async () => {
     const agent = await registerAndGetAgent();
     const created = await agent
       .post("/api/v1/teams")
@@ -115,10 +115,25 @@ describe("Team API", () => {
       .field("phone", "+15551234567");
     const id = created.body?.data?._id;
 
-    const delRes = await agent.delete(`/api/v1/teams/${id}`);
+    const delRes = await agent.patch(`/api/v1/teams/${id}/delete`);
     expect(delRes.status).toBe(200);
 
     const getRes = await request(app).get(`/api/v1/teams/${id}`);
     expect(getRes.status).toBe(404);
+
+    const restoreRes = await agent.patch(`/api/v1/teams/${id}/restore`);
+    expect(restoreRes.status).toBe(200);
+
+    const restoredRes = await request(app).get(`/api/v1/teams/${id}`);
+    expect(restoredRes.status).toBe(200);
+
+    const softDeleteAgainRes = await agent.patch(`/api/v1/teams/${id}/delete`);
+    expect(softDeleteAgainRes.status).toBe(200);
+
+    const hardDeleteRes = await agent.delete(`/api/v1/teams/${id}/hard-delete`);
+    expect(hardDeleteRes.status).toBe(200);
+
+    const finalGetRes = await request(app).get(`/api/v1/teams/${id}`);
+    expect(finalGetRes.status).toBe(404);
   });
 });

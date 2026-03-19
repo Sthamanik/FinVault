@@ -47,11 +47,25 @@ class RewardRoute {
       asyncHandler(RewardController.update.bind(RewardController))
     );
 
-    this.router.delete(
-      "/:id",
+    this.router.patch(
+      "/:id/delete",
       verifyJWT,
       authenticatedLimiter,
       asyncHandler(RewardController.delete.bind(RewardController))
+    );
+
+    this.router.patch(
+      "/:id/restore",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(RewardController.restore.bind(RewardController))
+    );
+
+    this.router.delete(
+      "/:id/hard-delete",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(RewardController.hardDelete.bind(RewardController))
     );
   }
 }

@@ -65,7 +65,7 @@ class BlogController {
       .json(new ApiResponse(200, blog, "Blog updated successfully"));
   }
 
-  // Delete blog
+  // Soft delete blog
   async delete(req: Request, res: Response) {
     const { id } = req.params;
 
@@ -74,6 +74,28 @@ class BlogController {
     res
       .status(200)
       .json(new ApiResponse(200, null, "Blog deleted successfully"));
+  }
+  
+  // Restore the soft deleted blog
+  async restore(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await BlogService.restore(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, "Blog restored successfully"));
+  }
+
+  // Delete blog
+  async hardDelete(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await BlogService.hardDelete(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, "Blog deleted permanently"));
   }
 }
 

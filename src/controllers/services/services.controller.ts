@@ -68,7 +68,7 @@ class ServiceController {
       .json(new ApiResponse(200, service, 'Service updated successfully'));
   }
 
-  // Delete service
+  // Soft delete service
   async delete(req: Request, res: Response) {
     const { id } = req.params;
 
@@ -77,6 +77,28 @@ class ServiceController {
     res
       .status(200)
       .json(new ApiResponse(200, null, 'Service deleted successfully'));
+  }
+
+  // Restore soft deleted service
+  async restore(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await ServiceService.restore(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, 'Service restored successfully'));
+  }
+
+  // Delete service
+  async hardDelete(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await ServiceService.hardDelete(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, 'Service deleted permanently'));
   }
 
   // Toggle isActive

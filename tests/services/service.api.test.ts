@@ -131,15 +131,30 @@ describe("Service API", () => {
     expect(res.body?.data?.isActive).toBe(false);
   });
 
-  it("deletes a service with auth and hides it from public", async () => {
+  it("soft deletes, restores, and hard deletes a service with auth", async () => {
     const agent = await registerAndGetAgent();
     const created = await sendServiceForm(agent, buildService());
     const id = created.body?.data?._id;
 
-    const delRes = await agent.delete(`/api/v1/services/${id}`);
+    const delRes = await agent.patch(`/api/v1/services/${id}/delete`);
     expect(delRes.status).toBe(200);
 
     const getRes = await request(app).get("/api/v1/services/slug/wealth-growth");
     expect(getRes.status).toBe(404);
+
+    const restoreRes = await agent.patch(`/api/v1/services/${id}/restore`);
+    expect(restoreRes.status).toBe(200);
+
+    const restoredRes = await request(app).get("/api/v1/services/slug/wealth-growth");
+    expect(restoredRes.status).toBe(200);
+
+    const softDeleteAgainRes = await agent.patch(`/api/v1/services/${id}/delete`);
+    expect(softDeleteAgainRes.status).toBe(200);
+
+    const hardDeleteRes = await agent.delete(`/api/v1/services/${id}/hard-delete`);
+    expect(hardDeleteRes.status).toBe(200);
+
+    const finalGetRes = await request(app).get("/api/v1/services/slug/wealth-growth");
+    expect(finalGetRes.status).toBe(404);
   });
 });

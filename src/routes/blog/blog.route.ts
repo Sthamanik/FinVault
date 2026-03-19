@@ -51,11 +51,25 @@ class BlogRoute {
       asyncHandler(BlogController.update.bind(BlogController))
     );
 
-    this.router.delete(
-      "/:id",
+    this.router.patch(
+      "/:id/delete",
       verifyJWT,
       authenticatedLimiter,
       asyncHandler(BlogController.delete.bind(BlogController))
+    );
+
+    this.router.patch(
+      "/:id/restore",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(BlogController.restore.bind(BlogController))
+    );
+
+    this.router.delete(
+      "/:id/hard-delete",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(BlogController.hardDelete.bind(BlogController))
     );
   }
 }

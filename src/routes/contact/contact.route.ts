@@ -48,11 +48,25 @@ class ContactRoute {
       asyncHandler(ContactController.updateStatus.bind(ContactController))
     );
 
-    this.router.delete(
-      "/:id",
+    this.router.patch(
+      "/:id/delete",
       verifyJWT,
       authenticatedLimiter,
       asyncHandler(ContactController.delete.bind(ContactController))
+    );
+
+    this.router.patch(
+      "/:id/restore",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(ContactController.restore.bind(ContactController))
+    );
+
+    this.router.delete(
+      "/:id/hard-delete",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(ContactController.hardDelete.bind(ContactController))
     );
   }
 }

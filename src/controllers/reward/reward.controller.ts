@@ -51,7 +51,7 @@ class RewardController {
       .json(new ApiResponse(200, reward, "Reward updated successfully"));
   }
 
-  // Delete reward
+  // Soft delete reward
   async delete(req: Request, res: Response) {
     const { id } = req.params;
 
@@ -60,6 +60,28 @@ class RewardController {
     res
       .status(200)
       .json(new ApiResponse(200, null, "Reward deleted successfully"));
+  }
+
+  // restore soft deleted reward
+  async restore(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await RewardService.restore(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, "Reward restored successfully"));
+  }
+
+  // Delete reward
+  async hardDelete(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await RewardService.hardDelete(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, "Reward deleted permanently"));
   }
 }
 

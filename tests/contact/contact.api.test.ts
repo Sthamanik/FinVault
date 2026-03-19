@@ -51,17 +51,32 @@ describe("Contact API", () => {
     expect(res.body?.data?.status).toBe("read");
   });
 
-  it("deletes a contact with auth", async () => {
+  it("soft deletes, restores, and hard deletes a contact with auth", async () => {
     const created = await request(app)
       .post("/api/v1/contacts")
       .send(buildContact());
     const id = created.body?.data?._id;
     const agent = await registerAndGetAgent();
 
-    const delRes = await agent.delete(`/api/v1/contacts/${id}`);
+    const delRes = await agent.patch(`/api/v1/contacts/${id}/delete`);
     expect(delRes.status).toBe(200);
 
     const getRes = await agent.get(`/api/v1/contacts/${id}`);
     expect(getRes.status).toBe(404);
+
+    const restoreRes = await agent.patch(`/api/v1/contacts/${id}/restore`);
+    expect(restoreRes.status).toBe(200);
+
+    const restoredRes = await agent.get(`/api/v1/contacts/${id}`);
+    expect(restoredRes.status).toBe(200);
+
+    const softDeleteAgainRes = await agent.patch(`/api/v1/contacts/${id}/delete`);
+    expect(softDeleteAgainRes.status).toBe(200);
+
+    const hardDeleteRes = await agent.delete(`/api/v1/contacts/${id}/hard-delete`);
+    expect(hardDeleteRes.status).toBe(200);
+
+    const finalGetRes = await agent.get(`/api/v1/contacts/${id}`);
+    expect(finalGetRes.status).toBe(404);
   });
 });

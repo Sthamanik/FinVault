@@ -65,7 +65,7 @@ class CareerController {
       .json(new ApiResponse(200, career, "Career updated successfully"));
   }
 
-  // Delete career
+  // Soft delete career
   async delete(req: Request, res: Response) {
     const { id } = req.params;
 
@@ -74,6 +74,28 @@ class CareerController {
     res
       .status(200)
       .json(new ApiResponse(200, null, "Career deleted successfully"));
+  }
+
+  // restore soft deleted career
+  async restore(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await CareerService.restore(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, "Career restored successfully"));
+  }
+
+  // Delete career
+  async hardDelete(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await CareerService.hardDelete(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, "Career deleted permanently"));
   }
 
   // Toggle isActive

@@ -64,7 +64,7 @@ class ApplicationController {
       .json(new ApiResponse(200, application, "Application status updated"));
   }
 
-  // Delete application
+  // Soft delete application
   async delete(req: Request, res: Response) {
     const { id } = req.params;
 
@@ -73,6 +73,27 @@ class ApplicationController {
     res
       .status(200)
       .json(new ApiResponse(200, null, "Application deleted successfully"));
+  }
+
+  // Restore the soft deleted one
+  async restore(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await ApplicationService.restore(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, "Application restored successfully"));
+  }
+
+  async hardDelete(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await ApplicationService.hardDelete(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, "Application deleted permanently"));
   }
 }
 

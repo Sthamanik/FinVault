@@ -44,11 +44,25 @@ class TeamRoute {
       asyncHandler(TeamController.update.bind(TeamController))
     );
 
-    this.router.delete(
-      "/:id",
+    this.router.patch(
+      "/:id/delete",
       verifyJWT,
       authenticatedLimiter,
       asyncHandler(TeamController.delete.bind(TeamController))
+    );
+
+    this.router.patch(
+      "/:id/restore",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(TeamController.restore.bind(TeamController))
+    );
+
+    this.router.delete(
+      "/:id/hard-delete",
+      verifyJWT,
+      authenticatedLimiter,
+      asyncHandler(TeamController.hardDelete.bind(TeamController))
     );
 
     this.router.patch(

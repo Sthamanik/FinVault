@@ -7,6 +7,7 @@ import { defaultLimiter } from "@middlewares/rateLimit.middleware.js";
 
 // API Routes import 
 import adminRouter from "@routes/admin/admin.route.js";
+import dashboardRouter from "@routes/admin/dashboard.route.js";
 import serviceRouter from "@routes/services/services.route.js";
 import blogRouter from "@routes/blog/blog.route.js";
 import careerRouter from "@routes/career/career.route.js";
@@ -48,6 +49,7 @@ app.get("/health", (_, res) => {
 
 // API Routes initialization
 app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/dashboard", dashboardRouter);
 app.use("/api/v1/services", serviceRouter);
 app.use("/api/v1/blogs", blogRouter);
 app.use("/api/v1/careers", careerRouter);

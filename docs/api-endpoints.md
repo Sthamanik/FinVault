@@ -317,7 +317,7 @@ All fields are optional (same as create).
 
 ---
 
-### DELETE /blogs/:id
+### PATCH /blogs/:id/delete
 
 Soft delete a blog.
 
@@ -328,6 +328,40 @@ Soft delete a blog.
 {
   "success": true,
   "message": "Blog deleted successfully",
+  "data": null
+}
+```
+
+---
+
+### PATCH /blogs/:id/restore
+
+Restore a soft-deleted blog.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Blog restored successfully",
+  "data": null
+}
+```
+
+---
+
+### DELETE /blogs/:id/hard-delete
+
+Permanently delete a soft-deleted blog.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Blog deleted permanently",
   "data": null
 }
 ```
@@ -437,7 +471,7 @@ All fields optional.
 
 ---
 
-### DELETE /services/:id
+### PATCH /services/:id/delete
 
 Soft delete a service.
 
@@ -447,6 +481,40 @@ Soft delete a service.
 ```json
 {
   "success": true,
+  "data": null
+}
+```
+
+---
+
+### PATCH /services/:id/restore
+
+Restore a soft-deleted service.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Service restored successfully",
+  "data": null
+}
+```
+
+---
+
+### DELETE /services/:id/hard-delete
+
+Permanently delete a soft-deleted service.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Service deleted permanently",
   "data": null
 }
 ```
@@ -583,7 +651,7 @@ All fields optional.
 
 ---
 
-### DELETE /careers/:id
+### PATCH /careers/:id/delete
 
 Soft delete a job opening.
 
@@ -593,6 +661,40 @@ Soft delete a job opening.
 ```json
 {
   "success": true,
+  "data": null
+}
+```
+
+---
+
+### PATCH /careers/:id/restore
+
+Restore a soft-deleted job opening.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Career restored successfully",
+  "data": null
+}
+```
+
+---
+
+### DELETE /careers/:id/hard-delete
+
+Permanently delete a soft-deleted job opening.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Career deleted permanently",
   "data": null
 }
 ```
@@ -735,7 +837,7 @@ Update application status.
 
 ---
 
-### DELETE /applications/:id
+### PATCH /applications/:id/delete
 
 Soft delete an application.
 
@@ -745,6 +847,40 @@ Soft delete an application.
 ```json
 {
   "success": true,
+  "data": null
+}
+```
+
+---
+
+### PATCH /applications/:id/restore
+
+Restore a soft-deleted application.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Application restored successfully",
+  "data": null
+}
+```
+
+---
+
+### DELETE /applications/:id/hard-delete
+
+Permanently delete a soft-deleted application.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Application deleted permanently",
   "data": null
 }
 ```
@@ -850,7 +986,7 @@ Valid status values: `unread`, `read`, `resolved`
 
 ---
 
-### DELETE /contacts/:id
+### PATCH /contacts/:id/delete
 
 Soft delete a contact.
 
@@ -860,6 +996,40 @@ Soft delete a contact.
 ```json
 {
   "success": true,
+  "data": null
+}
+```
+
+---
+
+### PATCH /contacts/:id/restore
+
+Restore a soft-deleted contact.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Contact restored successfully",
+  "data": null
+}
+```
+
+---
+
+### DELETE /contacts/:id/hard-delete
+
+Permanently delete a soft-deleted contact.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Contact deleted permanently",
   "data": null
 }
 ```
@@ -962,7 +1132,7 @@ All fields optional.
 
 ---
 
-### DELETE /rewards/:id
+### PATCH /rewards/:id/delete
 
 Soft delete a reward.
 
@@ -972,6 +1142,40 @@ Soft delete a reward.
 ```json
 {
   "success": true,
+  "data": null
+}
+```
+
+---
+
+### PATCH /rewards/:id/restore
+
+Restore a soft-deleted reward.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Reward restored successfully",
+  "data": null
+}
+```
+
+---
+
+### DELETE /rewards/:id/hard-delete
+
+Permanently delete a soft-deleted reward.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Reward deleted permanently",
   "data": null
 }
 ```
@@ -1080,7 +1284,7 @@ All fields optional.
 
 ---
 
-### DELETE /teams/:id
+### PATCH /teams/:id/delete
 
 Soft delete a team member.
 
@@ -1090,6 +1294,40 @@ Soft delete a team member.
 ```json
 {
   "success": true,
+  "data": null
+}
+```
+
+---
+
+### PATCH /teams/:id/restore
+
+Restore a soft-deleted team member.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Team member restored successfully",
+  "data": null
+}
+```
+
+---
+
+### DELETE /teams/:id/hard-delete
+
+Permanently delete a soft-deleted team member.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Team member deleted permanently",
   "data": null
 }
 ```

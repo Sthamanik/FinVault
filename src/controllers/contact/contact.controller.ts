@@ -51,7 +51,7 @@ class ContactController {
       .json(new ApiResponse(200, contact, "Contact status updated"));
   }
 
-  // Delete contact
+  // Soft delete contact
   async delete(req: Request, res: Response) {
     const { id } = req.params;
 
@@ -60,6 +60,28 @@ class ContactController {
     res
       .status(200)
       .json(new ApiResponse(200, null, "Contact deleted successfully"));
+  }
+
+  // soft delete contact
+  async restore(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await ContactService.restore(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, "Contact restored successfully"));
+  }
+
+  // Delete contact
+  async hardDelete(req: Request, res: Response) {
+    const { id } = req.params;
+
+    await ContactService.hardDelete(id as string);
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, null, "Contact deleted permanently"));
   }
 }
 

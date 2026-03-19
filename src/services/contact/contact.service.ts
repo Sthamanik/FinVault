@@ -111,7 +111,7 @@ class ContactService {
     return null;
   }
 
-  // ADD: restore
+  // Restore
   async restore(id: string) {
     const contact = await Contact.findOne({ _id: id, isDeleted: true });
     if (!contact) {
@@ -122,7 +122,7 @@ class ContactService {
     return null;
   }
 
-  // ADD: hard delete
+  // Hard delete
   async hardDelete(id: string) {
     const contact = await Contact.findOne({ _id: id, isDeleted: true });
     if (!contact) {
