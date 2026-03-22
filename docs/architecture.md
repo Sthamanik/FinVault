@@ -212,6 +212,6 @@ Unhandled errors return a generic 500 response. In development, the stack trace 
 On push to `main`:
 
 1. **Test job** — spins up Redis service, installs deps, runs Vitest tests
-2. **Build and push job** — builds Docker image, pushes to `ghcr.io/sthamanik/finVault:latest`
+2. **Build and push job** — builds Docker image, pushes to `ghcr.io/sthamanik/finvault:latest`
 
 Build job only runs if tests pass (`needs: test`). Docker layers are cached via GitHub Actions cache for faster subsequent builds.
