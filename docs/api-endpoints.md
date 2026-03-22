@@ -1,20 +1,15 @@
 # API Endpoints
 
 ## Base URL
-
 ```
 http://localhost:5001/api/v1
 ```
 
 ## Authentication
 
-Protected routes require a valid JWT access token sent as an HTTP-only cookie (`accessToken`) or as a Bearer token in the `Authorization` header:
+Protected routes require a valid JWT access token sent as an HTTP-only cookie (`accessToken`):
 
-```
-Authorization: Bearer <accessToken>
-```
-
-Tokens are issued on login and stored as cookies automatically.
+Tokens are issued on login and stored as cookies automatically. On access token expiry, the middleware attempts refresh automatically using the refresh token cookie.
 
 ---
 
@@ -43,8 +38,8 @@ Check if the server is running.
 
 Login as admin.
 
-**Auth required:** No  
-**Rate limit:** 5 requests per hour
+**Auth required:** No
+**Rate limit:** 5 requests per 15 minutes
 
 **Request body:**
 ```json
@@ -61,12 +56,8 @@ Login as admin.
   "statusCode": 200,
   "message": "Admin logged in successfully",
   "data": {
-    "admin": {
-      "_id": "...",
-      "email": "admin@example.com"
-    },
-    "accessToken": "...",
-    "refreshToken": "..."
+    "_id": "...",
+    "email": "admin@example.com"
   }
 }
 ```
@@ -93,41 +84,6 @@ Logout admin and clear cookies.
   "success": true,
   "message": "Admin logged out successfully",
   "data": null
-}
-```
-
----
-
-### POST /admin/refresh-token
-
-Get a new access token using a refresh token.
-
-**Auth required:** No
-
-**Request body:**
-```json
-{
-  "refreshToken": "..."
-}
-```
-
-**Response 200:**
-```json
-{
-  "success": true,
-  "message": "Access token refreshed",
-  "data": {
-    "accessToken": "...",
-    "refreshToken": "..."
-  }
-}
-```
-
-**Response 401:**
-```json
-{
-  "success": false,
-  "message": "Invalid refresh token"
 }
 ```
 
@@ -187,13 +143,49 @@ Change admin password.
 
 ---
 
+## Dashboard
+
+### GET /dashboard
+
+Get admin dashboard summary.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "counts": {
+      "blogs": 10,
+      "services": 5,
+      "team": 8,
+      "rewards": 3,
+      "contacts": 24,
+      "careers": 4,
+      "applications": 47
+    },
+    "recent": {
+      "contacts": [...],
+      "applications": [...]
+    },
+    "breakdowns": {
+      "contacts": { "new": 10, "read": 8, "resolved": 6 },
+      "applications": { "pending": 20, "reviewed": 15, "shortlisted": 8, "rejected": 4 }
+    }
+  }
+}
+```
+
+---
+
 ## Blogs
 
 ### GET /blogs
 
-Get all published blogs with pagination.
+Get all blogs with pagination.
 
-**Auth required:** No  
+**Auth required:** No
 **Query params:** `page`, `limit`, `status`, `category`, `tag`, `search`
 
 **Response 200:**
@@ -205,16 +197,17 @@ Get all published blogs with pagination.
       {
         "_id": "...",
         "title": "Market Trends",
+        "slug": "market-trends",
         "content": "...",
         "author": "Admin",
         "status": "published",
         "tags": ["finance"],
         "category": "markets",
         "featuredImage": {
-          "url": "https://cloudinary.com/...",
+          "url": "https://r2.example.com/...",
           "public_id": "..."
         },
-        "slug": "market-trends",
+        "readTime": 3,
         "createdAt": "...",
         "updatedAt": "..."
       }
@@ -233,9 +226,9 @@ Get all published blogs with pagination.
 
 ---
 
-### GET /blogs/:id
+### GET /blogs/slug/:slug
 
-Get a single blog by ID.
+Get a single blog by slug.
 
 **Auth required:** No
 
@@ -243,16 +236,7 @@ Get a single blog by ID.
 ```json
 {
   "success": true,
-  "data": {
-    "_id": "...",
-    "title": "Market Trends",
-    "content": "...",
-    "author": "Admin",
-    "status": "published",
-    "featuredImage": { "url": "...", "public_id": "..." },
-    "createdAt": "...",
-    "updatedAt": "..."
-  }
+  "data": { ... }
 }
 ```
 
@@ -266,11 +250,27 @@ Get a single blog by ID.
 
 ---
 
+### GET /blogs/:id
+
+Get a single blog by ID.
+
+**Auth required:** Yes
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": { ... }
+}
+```
+
+---
+
 ### POST /blogs
 
 Create a new blog.
 
-**Auth required:** Yes  
+**Auth required:** Yes
 **Content-Type:** `multipart/form-data`
 
 **Request fields:**
@@ -278,13 +278,13 @@ Create a new blog.
 |---|---|---|
 | `title` | string | Yes |
 | `content` | string | Yes |
-| `author` | string | No |
+| `author` | string | No (default: Admin) |
 | `status` | `draft` \| `published` | No (default: `draft`) |
 | `category` | string | No |
 | `tags` | string[] | No |
 | `metaTitle` | string | No |
 | `metaDescription` | string | No |
-| `featuredImage` | file | No |
+| `featuredImage` | file (JPEG/PNG/WEBP) | No |
 
 **Response 201:**
 ```json
@@ -301,10 +301,10 @@ Create a new blog.
 
 Update a blog.
 
-**Auth required:** Yes  
+**Auth required:** Yes
 **Content-Type:** `multipart/form-data`
 
-All fields are optional (same as create).
+All fields optional — same as create.
 
 **Response 200:**
 ```json
@@ -374,7 +374,7 @@ Permanently delete a soft-deleted blog.
 
 Get all services with pagination.
 
-**Auth required:** No  
+**Auth required:** No
 **Query params:** `page`, `limit`, `isActive`, `search`
 
 **Response 200:**
@@ -386,11 +386,12 @@ Get all services with pagination.
       {
         "_id": "...",
         "title": "Wealth Management",
+        "slug": "wealth-management",
         "shortDescription": "...",
         "longDescription": "...",
         "ctaLink": "https://example.com",
         "investmentFocus": "Growth",
-        "industriesPortfolio": ["technology", "healthcare"],
+        "industriesPortfolio": ["Technology", "Finance & Banking"],
         "isActive": true,
         "order": 1,
         "image": { "url": "...", "public_id": "..." },
@@ -405,11 +406,27 @@ Get all services with pagination.
 
 ---
 
+### GET /services/slug/:slug
+
+Get a single service by slug.
+
+**Auth required:** No
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": { ... }
+}
+```
+
+---
+
 ### GET /services/:id
 
 Get a single service by ID.
 
-**Auth required:** No
+**Auth required:** Yes
 
 **Response 200:**
 ```json
@@ -425,7 +442,7 @@ Get a single service by ID.
 
 Create a new service.
 
-**Auth required:** Yes  
+**Auth required:** Yes
 **Content-Type:** `multipart/form-data`
 
 **Request fields:**
@@ -439,7 +456,9 @@ Create a new service.
 | `industriesPortfolio` | string[] | No |
 | `isActive` | boolean | No (default: `true`) |
 | `order` | number | No (default: `0`) |
-| `image` | file | No |
+| `image` | file (JPEG/PNG/WEBP) | No |
+
+Valid `industriesPortfolio` values: `Technology`, `Healthcare & Pharmaceuticals`, `Finance & Banking`, `Real Estate`, `Energy & Utilities`, `Consumer Goods & Retail`, `Infrastructure & Construction`, `Agriculture & Commodities`, `Manufacturing & Industrials`, `Telecommunications`
 
 **Response 201:**
 ```json
@@ -456,7 +475,7 @@ Create a new service.
 
 Update a service.
 
-**Auth required:** Yes  
+**Auth required:** Yes
 **Content-Type:** `multipart/form-data`
 
 All fields optional.
@@ -465,6 +484,7 @@ All fields optional.
 ```json
 {
   "success": true,
+  "message": "Service updated successfully",
   "data": { ... }
 }
 ```
@@ -481,6 +501,7 @@ Soft delete a service.
 ```json
 {
   "success": true,
+  "message": "Service deleted successfully",
   "data": null
 }
 ```
@@ -531,6 +552,7 @@ Toggle a service's active status.
 ```json
 {
   "success": true,
+  "message": "Service status toggled successfully",
   "data": {
     "_id": "...",
     "isActive": false,
@@ -547,7 +569,7 @@ Toggle a service's active status.
 
 Get all job openings.
 
-**Auth required:** No  
+**Auth required:** No
 **Query params:** `page`, `limit`, `isActive`, `search`
 
 **Response 200:**
@@ -559,6 +581,7 @@ Get all job openings.
       {
         "_id": "...",
         "title": "Senior Analyst",
+        "slug": "senior-analyst",
         "department": "Investment",
         "location": "NYC",
         "type": "full-time",
@@ -577,11 +600,27 @@ Get all job openings.
 
 ---
 
+### GET /careers/slug/:slug
+
+Get a single job opening by slug.
+
+**Auth required:** No
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": { ... }
+}
+```
+
+---
+
 ### GET /careers/:id
 
 Get a single job opening by ID.
 
-**Auth required:** No
+**Auth required:** Yes
 
 **Response 200:**
 ```json
@@ -619,6 +658,7 @@ Valid `type` values: `full-time`, `part-time`, `contract`, `internship`
 ```json
 {
   "success": true,
+  "message": "Career created successfully",
   "data": { ... }
 }
 ```
@@ -627,7 +667,7 @@ Valid `type` values: `full-time`, `part-time`, `contract`, `internship`
 ```json
 {
   "success": false,
-  "message": "Duplicate career: Career already exists"
+  "message": "Duplicate value on: title, department, location, type"
 }
 ```
 
@@ -645,6 +685,7 @@ All fields optional.
 ```json
 {
   "success": true,
+  "message": "Career updated successfully",
   "data": { ... }
 }
 ```
@@ -661,6 +702,7 @@ Soft delete a job opening.
 ```json
 {
   "success": true,
+  "message": "Career deleted successfully",
   "data": null
 }
 ```
@@ -711,6 +753,7 @@ Toggle a job opening's active status.
 ```json
 {
   "success": true,
+  "message": "Career status toggled successfully",
   "data": {
     "_id": "...",
     "isActive": false,
@@ -727,8 +770,8 @@ Toggle a job opening's active status.
 
 Submit a job application.
 
-**Auth required:** No  
-**Content-Type:** `multipart/form-data`  
+**Auth required:** No
+**Content-Type:** `multipart/form-data`
 **Rate limit:** 30 requests per hour
 
 **Request fields:**
@@ -738,14 +781,14 @@ Submit a job application.
 | `email` | string (email) | Yes |
 | `phone` | string | No |
 | `coverLetter` | string (min 100 chars) | No |
-| `resume` | file (PDF) | Yes |
-| `coverLetterFile` | file | No |
+| `resume` | file (PDF only) | Yes |
+| `coverLetterFile` | file (PDF only) | No |
 
 **Response 201:**
 ```json
 {
   "success": true,
-  "message": "Application submitted successfully",
+  "message": "Application submitted",
   "data": {
     "_id": "...",
     "jobId": "...",
@@ -780,10 +823,10 @@ Submit a job application.
 
 Get all applications.
 
-**Auth required:** Yes  
+**Auth required:** Yes
 **Query params:** `page`, `limit`, `status`, `jobId`, `search`
 
-Valid `status` values: `pending`, `reviewed`, `shortlisted`, `rejected`, `hired`
+Valid `status` values: `pending`, `reviewed`, `shortlisted`, `rejected`
 
 **Response 200:**
 ```json
@@ -827,10 +870,13 @@ Update application status.
 }
 ```
 
+Valid values: `pending`, `reviewed`, `shortlisted`, `rejected`
+
 **Response 200:**
 ```json
 {
   "success": true,
+  "message": "Application status updated",
   "data": { ... }
 }
 ```
@@ -847,6 +893,7 @@ Soft delete an application.
 ```json
 {
   "success": true,
+  "message": "Application deleted successfully",
   "data": null
 }
 ```
@@ -893,7 +940,7 @@ Permanently delete a soft-deleted application.
 
 Submit a contact form.
 
-**Auth required:** No  
+**Auth required:** No
 **Rate limit:** 30 requests per hour
 
 **Request body:**
@@ -907,17 +954,19 @@ Submit a contact form.
 }
 ```
 
+Valid `subject` values: `Portfolio Management`, `Mutual Fund Advisory`, `Retirement Planning`, `Tax Planning`, `Wealth Management`, `Stock Market Advisory`, `General Inquiry`, `Partnership`
+
 **Response 201:**
 ```json
 {
   "success": true,
-  "message": "Contact created successfully",
+  "message": "Contact submitted successfully",
   "data": {
     "_id": "...",
     "name": "John Doe",
     "email": "john@example.com",
     "subject": "General Inquiry",
-    "status": "unread",
+    "status": "new",
     "createdAt": "..."
   }
 }
@@ -929,8 +978,10 @@ Submit a contact form.
 
 Get all contact submissions.
 
-**Auth required:** Yes  
+**Auth required:** Yes
 **Query params:** `page`, `limit`, `status`, `search`
+
+Valid `status` values: `new`, `read`, `resolved`
 
 **Response 200:**
 ```json
@@ -974,12 +1025,13 @@ Update contact status.
 }
 ```
 
-Valid status values: `unread`, `read`, `resolved`
+Valid values: `new`, `read`, `resolved`
 
 **Response 200:**
 ```json
 {
   "success": true,
+  "message": "Contact status updated",
   "data": { ... }
 }
 ```
@@ -996,6 +1048,7 @@ Soft delete a contact.
 ```json
 {
   "success": true,
+  "message": "Contact deleted successfully",
   "data": null
 }
 ```
@@ -1042,7 +1095,7 @@ Permanently delete a soft-deleted contact.
 
 Get all rewards with pagination.
 
-**Auth required:** No  
+**Auth required:** No
 **Query params:** `page`, `limit`, `search`
 
 **Response 200:**
@@ -1090,7 +1143,7 @@ Get a single reward by ID.
 
 Create a new reward.
 
-**Auth required:** Yes  
+**Auth required:** Yes
 **Content-Type:** `multipart/form-data`
 
 **Request fields:**
@@ -1101,12 +1154,13 @@ Create a new reward.
 | `description` | string | No |
 | `credentialUrl` | string (URL) | No |
 | `issueDate` | date | No |
-| `image` | file | No |
+| `image` | file (JPEG/PNG/WEBP) | No |
 
 **Response 201:**
 ```json
 {
   "success": true,
+  "message": "Reward created successfully",
   "data": { ... }
 }
 ```
@@ -1117,7 +1171,7 @@ Create a new reward.
 
 Update a reward.
 
-**Auth required:** Yes  
+**Auth required:** Yes
 **Content-Type:** `multipart/form-data`
 
 All fields optional.
@@ -1126,6 +1180,7 @@ All fields optional.
 ```json
 {
   "success": true,
+  "message": "Reward updated successfully",
   "data": { ... }
 }
 ```
@@ -1142,6 +1197,7 @@ Soft delete a reward.
 ```json
 {
   "success": true,
+  "message": "Reward deleted successfully",
   "data": null
 }
 ```
@@ -1188,7 +1244,7 @@ Permanently delete a soft-deleted reward.
 
 Get all team members.
 
-**Auth required:** No  
+**Auth required:** No
 **Query params:** `page`, `limit`, `isActive`, `search`
 
 **Response 200:**
@@ -1240,7 +1296,7 @@ Get a single team member by ID.
 
 Create a new team member.
 
-**Auth required:** Yes  
+**Auth required:** Yes
 **Content-Type:** `multipart/form-data`
 
 **Request fields:**
@@ -1248,17 +1304,19 @@ Create a new team member.
 |---|---|---|
 | `name` | string | Yes |
 | `role` | string | Yes |
+| `phone` | string | Yes |
 | `bio` | string | No |
 | `socialLinks.linkedin` | string (URL) | No |
 | `socialLinks.twitter` | string (URL) | No |
 | `isActive` | boolean | No (default: `true`) |
-| `order` | number | No |
-| `profilePhoto` | file | No |
+| `order` | number | No (default: `0`) |
+| `profilePhoto` | file (JPEG/PNG/WEBP) | No |
 
 **Response 201:**
 ```json
 {
   "success": true,
+  "message": "Team member created successfully",
   "data": { ... }
 }
 ```
@@ -1269,7 +1327,7 @@ Create a new team member.
 
 Update a team member.
 
-**Auth required:** Yes  
+**Auth required:** Yes
 **Content-Type:** `multipart/form-data`
 
 All fields optional.
@@ -1278,6 +1336,7 @@ All fields optional.
 ```json
 {
   "success": true,
+  "message": "Team member updated successfully",
   "data": { ... }
 }
 ```
@@ -1294,6 +1353,7 @@ Soft delete a team member.
 ```json
 {
   "success": true,
+  "message": "Team member deleted successfully",
   "data": null
 }
 ```
@@ -1344,6 +1404,7 @@ Toggle a team member's active status.
 ```json
 {
   "success": true,
+  "message": "Team status toggled successfully",
   "data": {
     "_id": "...",
     "isActive": false,
@@ -1373,7 +1434,7 @@ Toggle a team member's active status.
 {
   "statusCode": 401,
   "success": false,
-  "message": "Unauthorized request"
+  "message": "Please login first"
 }
 ```
 
@@ -1383,6 +1444,15 @@ Toggle a team member's active status.
   "statusCode": 404,
   "success": false,
   "message": "Resource not found"
+}
+```
+
+### 409 Conflict
+```json
+{
+  "statusCode": 409,
+  "success": false,
+  "message": "Duplicate value on: field"
 }
 ```
 

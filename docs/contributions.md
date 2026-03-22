@@ -6,7 +6,6 @@
 - pnpm
 - MongoDB running locally
 - Redis running locally
-
 ```bash
 brew install redis
 brew services start redis
@@ -15,7 +14,6 @@ brew services start redis
 ---
 
 ## Local Setup
-
 ```bash
 # Clone the repo
 git clone https://github.com/Sthamanik/FinVault.git
@@ -40,7 +38,6 @@ pnpm dev
 ## Running Tests
 
 Tests use MongoMemoryServer (no real MongoDB needed) and a local Redis instance.
-
 ```bash
 # Make sure Redis is running
 redis-cli ping  # should return PONG
@@ -64,11 +61,12 @@ Read [architecture.md](architecture.md) before making changes. Understand which 
 - New business logic → service only
 - New utility → `utils/`
 - New config → `config/`
+- New queue job → `queues/` + `workers/`
+- New email template → `templates/email/`
 
 ---
 
 ## Branch Naming
-
 ```
 feature/short-description       # new features
 fix/short-description           # bug fixes
@@ -83,6 +81,7 @@ feature/add-newsletter-endpoint
 fix/career-duplicate-check
 refactor/extract-cache-middleware
 docs/update-api-endpoints
+chore/update-pnpm
 ```
 
 ---
@@ -90,9 +89,8 @@ docs/update-api-endpoints
 ## Commit Messages
 
 Follow conventional commits format:
-
 ```
-type: short description (max 72 chars)
+type(scope): short description (max 72 chars)
 ```
 
 Types:
@@ -106,15 +104,16 @@ Types:
 
 Examples:
 ```
-feat: add openings field to career model
-fix: correct Dockerfile casing for Linux builds
-refactor: extract rate limit config from middleware
-docs: add caching strategy to architecture.md
-test: add cache invalidation tests for blog service
-chore: update pnpm to 10.32.1
+feat(auth): implement JWT refresh token rotation
+feat(cache): add version-based cache invalidation
+fix(career): correct duplicate check on restore
+refactor(rateLimit): extract config from middleware
+docs(api): add missing restore endpoints
+test(blog): add cache invalidation tests
+chore(deps): update pnpm to 10.32.1
 ```
 
-Do not use vague messages like `fix stuff`, `update`, `wip`.
+Do not use vague messages like `fix stuff`, `update`, `wip`, or `fix: bug fix`.
 
 ---
 
@@ -123,7 +122,7 @@ Do not use vague messages like `fix stuff`, `update`, `wip`.
 ### General
 
 - TypeScript strict mode is enabled — no `any` unless absolutely necessary
-- All async functions must handle errors — use `asyncHandler` for controllers
+- All async functions must handle errors — use `asyncHandler` for controllers and middlewares
 - Services never throw generic errors — always use `ApiError` with appropriate status codes
 - No `console.log` — use the pino `logger` from `@utils/logger.utils`
 
@@ -132,17 +131,32 @@ Do not use vague messages like `fix stuff`, `update`, `wip`.
 - Cache logic lives in services, not controllers
 - Every write operation (create/update/delete) must invalidate relevant cache keys
 - Use `Promise.all` for parallel cache operations on write
-
 ```ts
 // correct
 await Promise.all([
   cache.delete(`blog:id:${id}`),
+  cache.delete(`blog:slug:${blog.slug}`),
   cache.incrementVersion('blog')
 ]);
 
 // wrong
 await cache.delete(`blog:id:${id}`);
+await cache.delete(`blog:slug:${blog.slug}`);
 await cache.incrementVersion('blog');
+```
+
+### File Operations
+
+- File uploads are synchronous — response depends on the URL
+- File deletions are always async via BullMQ — never block the response for R2 cleanup
+```ts
+// correct — async deletion
+enqueueR2Delete(publicId).catch(err =>
+  logger.error(`failed to enqueue R2 delete: ${err.message}`)
+);
+
+// wrong — blocks response
+await deleteFromR2(publicId);
 ```
 
 ### Validation
@@ -154,7 +168,6 @@ await cache.incrementVersion('blog');
 ### Error Handling
 
 - Use `ApiError` for all known errors:
-
 ```ts
 throw new ApiError(404, 'Blog not found');
 throw new ApiError(409, 'Resource already exists');
@@ -163,6 +176,14 @@ throw new ApiError(400, 'Validation failed', errors);
 
 - Never throw raw `Error` objects from services
 - Never let cache errors propagate — cache utils catch internally
+- Never use `res.json()` directly for errors — always throw and let global handler respond
+
+### Soft Deletes
+
+Every resource follows the three-stage deletion pattern:
+- `PATCH /:id/delete` — soft delete
+- `PATCH /:id/restore` — restore
+- `DELETE /:id/hard-delete` — permanent, only on soft-deleted resources
 
 ---
 
@@ -175,8 +196,11 @@ Follow this checklist:
 - [ ] Create service in `src/services/` with cache logic if applicable
 - [ ] Create controller in `src/controllers/`
 - [ ] Create route in `src/routes/` and mount in `src/app.ts`
+- [ ] Add queue/worker if async jobs are needed
+- [ ] Add email template if notifications are needed
 - [ ] Add tests in `tests/`
-- [ ] Update `api-endpoints.md`
+- [ ] Update `docs/api-endpoints.md`
+- [ ] Update `docs/architecture.md` if structure changes
 
 ---
 
