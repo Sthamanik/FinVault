@@ -11,7 +11,7 @@ import {
 import { applicationStatusTemplate } from "@templates/email/applicationStatus.email.js";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL!;
-const SMTP_FROM = `"Genesis Investments" <${process.env.SMTP_USER}>`;
+const SMTP_FROM = `"FinVault" <${process.env.SMTP_USER}>`;
 
 const processEmailJob = async (job: Job<EmailJobData>) => {
   const { data } = job;

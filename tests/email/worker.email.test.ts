@@ -29,7 +29,7 @@ describe("Email worker — sendMail recipients", () => {
     const template = contactNewTemplate(payload);
 
     await transporter.sendMail({
-      from: `"Genesis Investments" <noreply@example.com>`,
+      from: `"FinVault" <noreply@example.com>`,
       to: "admin@example.com",
       subject: template.subject,
       html: template.html,
@@ -57,13 +57,13 @@ describe("Email worker — sendMail recipients", () => {
 
     await Promise.all([
       transporter.sendMail({
-        from: `"Genesis Investments" <noreply@example.com>`,
+        from: `"FinVault" <noreply@example.com>`,
         to: "admin@example.com",
         subject: adminTemplate.subject,
         html: adminTemplate.html,
       }),
       transporter.sendMail({
-        from: `"Genesis Investments" <noreply@example.com>`,
+        from: `"FinVault" <noreply@example.com>`,
         to: payload.applicantEmail,
         subject: confirmTemplate.subject,
         html: confirmTemplate.html,
@@ -94,7 +94,7 @@ describe("Email worker — sendMail recipients", () => {
     const template = applicationStatusTemplate(payload);
 
     await transporter.sendMail({
-      from: `"Genesis Investments" <noreply@example.com>`,
+      from: `"FinVault" <noreply@example.com>`,
       to: payload.applicantEmail, // applicant, not admin
       subject: template.subject,
       html: template.html,

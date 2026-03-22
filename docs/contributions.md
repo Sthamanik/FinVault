@@ -18,8 +18,8 @@ brew services start redis
 
 ```bash
 # Clone the repo
-git clone https://github.com/Sthamanik/genesis_backend.git
-cd genesis_backend
+git clone https://github.com/Sthamanik/FinVault.git
+cd FinVault
 
 # Install dependencies
 pnpm install

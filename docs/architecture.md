@@ -2,7 +2,7 @@
 
 ## System Overview
 
-Genesis Backend is a RESTful API for an investment company website. It serves a frontend client with content (blogs, services, careers, team) and handles user interactions (contact forms, job applications).
+FinVault Backend is a RESTful API for an investment company website. It serves a frontend client with content (blogs, services, careers, team) and handles user interactions (contact forms, job applications).
 
 ```
 Client (Frontend)
@@ -212,6 +212,6 @@ Unhandled errors return a generic 500 response. In development, the stack trace 
 On push to `main`:
 
 1. **Test job** — spins up Redis service, installs deps, runs Vitest tests
-2. **Build and push job** — builds Docker image, pushes to `ghcr.io/sthamanik/genesis-backend:latest`
+2. **Build and push job** — builds Docker image, pushes to `ghcr.io/sthamanik/FinVault:latest`
 
 Build job only runs if tests pass (`needs: test`). Docker layers are cached via GitHub Actions cache for faster subsequent builds.

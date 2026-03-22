@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    container_name: genesis_app
+    container_name: finvault_api
     ports:
       - '5001:5001'
     env_file:
@@ -17,7 +17,7 @@ services:
 
   mongo: 
     image: mongo:8
-    container_name: genesis_mongo
+    container_name: finvault_mongo
     ports:
       - '27017:27017'
     volumes:
@@ -28,19 +28,19 @@ services:
 
   redis:
     image: redis:8
-    container_name: genesis_redis
+    container_name: finvault_redis
     ports:
       - '6379:6379'
     volumes:
       - redis_data:/data
     restart: unless-stopped
     networks:
-      - genesis_network
+      - finvault_network
 
 volumes:
   mongo_data:
   redis_data:
 
 networks:
-  genesis_network: 
+  finvault_network: 
     driver: bridge
