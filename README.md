@@ -111,4 +111,4 @@ See [docs/contributions.md](docs/contributions.md) for contribution guidelines.
 
 On every push to `main`:
 1. Tests run against a Redis service
-2. Docker image is built and pushed to `ghcr.io/sthamanik/genesis-backend:latest`
+2. Docker image is built and pushed to `ghcr.io/sthamanik/finvault:latest`
